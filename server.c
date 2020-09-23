@@ -96,4 +96,5 @@ int main(int argc, char *argv[]){
     
     // close up
     close(sockfd); 
+    return 0;
 }

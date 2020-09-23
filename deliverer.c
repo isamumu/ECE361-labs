@@ -18,10 +18,12 @@ int main(){
     ////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////
 
-    // Section 1
+    // Section 1 (see page 35 on Beej's guide for useful tips)
     int sockfd, numbytes;
     char buf[MAXDATASIZE];
     struct addrinfo hints, *servinfo, *p;
+    struct sockaddr_storage their_addr;
+    socklen_t addr_len;
     int rv;
     char s[INET6_ADDRSTRLEN];
     char *ftp_msg = "ftp";
@@ -47,8 +49,6 @@ int main(){
         exit(1);
     }
 
-    int sentYes = sendto(sockfd, ftp_msg, strlen(ftp_msg), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
-
     if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
         close(sockfd);
         perror("client: connect");
@@ -60,6 +60,7 @@ int main(){
         return 2;
     }
 
+    // stuff Beej's guide recommends
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
     printf("client: connecting to %s\n", s);
     freeaddrinfo(servinfo); // all done with this structure
@@ -74,4 +75,29 @@ int main(){
     close(sockfd);
     return 0;
 
+    // send the ftp message
+    int sentftp = sendto(sockfd, ftp_msg, strlen(ftp_msg), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+    if(sentYes == -1){
+        perror("failed to send ftp");
+        exit(1);
+    }
+    char buffer[MAXBUFLEN-1] = 0; // buf is the buffer to read the information into. Gonna store stuff
+    addr_len = sizeof their_addr;
+
+    // receive a response from the server
+    int received =  recvfrom(sockfd, buffer, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len)
+    if(received == -1){
+        perror("failed to receive from server");
+        exit(1);
+    }
+
+    if(strcmp(buffer, "yes")){
+        char *success_msg = "A file transfer can start";
+        int sentMsg = sendto(sockfd, ftp_msg, strlen(ftp_msg), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+    } else}
+        exit(1);
+    }
+    
+    close(sockfd);
+    return 0;
 }
