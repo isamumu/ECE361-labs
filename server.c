@@ -6,7 +6,9 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <netinet/in.h>
+#include <netdb.h>
 
+#define BACKLOG 10 //followed the guide, not sure if this is the correct number
 
 int main(int argc, char *argv[]){
     // the execution command should have the following structure: server <UDP listen port>
@@ -28,7 +30,8 @@ int main(int argc, char *argv[]){
     struct sockaddr_in servaddr, cliaddr;
     struct addrinfo hints, *res, *p;
     struct addrinfo *servinfo; // will point to the results
-    socklen_t = clilen;
+    socklen_t clilen, addr_size;
+
 
     int status;
     int port = atoi(argv[1]); // get the port
@@ -57,40 +60,45 @@ int main(int argc, char *argv[]){
     servaddr.sin_family    = AF_INET; // IPv4 
     servaddr.sin_addr.s_addr = INADDR_ANY; 
     servaddr.sin_port = htons(port); 
-    memset(serveraddr.sin_zero, '\0', sizeof serveraddr.sin_zero);
+    memset(servaddr.sin_zero, '\0', sizeof servaddr.sin_zero);
 
-    int binder = bind(sockfd, (struct sockaddr *)&my_addr, sizeof servaddr);
+    int binder = bind(sockfd, (struct sockaddr *)&servaddr, sizeof servaddr);
     // check for bind error
     if (binder == -1) {
         close(sockfd);
         perror("failed to bind!!");
-        exit(1)
+        exit(1);
     }
     
     listen(sockfd, BACKLOG);
     addr_size = sizeof servaddr;
-    new_fd = accept(sockfd, (struct sockaddr *)&serv_addr, &addr_size);
-    BUF_SIZE = 50; // len is the maximum length of the buffer which we don't know
+    int new_fd = accept(sockfd, (struct sockaddr *)&servaddr, &addr_size);
+    if (new_fd == -1) {
+        perror("failed to accept");
+        exit(1);
+    }
 
-    char buffer[BUF_SIZE] = 0; // buf is the buffer to read the information into. Gonna store stuff
+    int BUF_SIZE = 50; // len is the maximum length of the buffer which we don't know
+
+    char buffer[BUF_SIZE]; // = 0; // buf is the buffer to read the information into. Gonna store stuff
     int received = recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &cliaddr, &clilen); 
     if(received == -1){
         perror("failed to receive from client");
-        exit(1)
+        exit(1);
     }
 
     if(strcmp(buffer, "ftp")){
         int sentYes = sendto(sockfd, yes_msg, strlen(yes_msg), 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
         if(sentYes == -1){
             perror("failed to send yes");
-            exit(1)
+            exit(1);
         }
             
     } else{
         int sentNo = sendto(sockfd, no_msg, strlen(no_msg), 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
         if(sentNo == -1){
             perror("failed to send no");
-            exit(1)
+            exit(1);
         }
     }
     
