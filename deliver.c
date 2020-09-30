@@ -106,14 +106,11 @@ int main(int argc, char **argv){
     // receive a response from the server
     char buffer[MAXBUFLEN - 1]; //= 0; //not sure what you means by intializing this to 0
     int received =  recvfrom(sockfd, buffer, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len);
+    
     if(received == -1){
         perror("failed to receive from server");
         exit(1);
     }
-
-    buf[received] = '\0';
-    printf("client: received '%s'\n",buf);
-    // send the ftp message
     
     // buf is the buffer to read the information into. Gonna store stuff
     addr_len = sizeof their_addr;
@@ -122,6 +119,7 @@ int main(int argc, char **argv){
         char *success_msg = "A file transfer can start";
         int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
     } else {
+        printf("file transfer may not proceed\n");
         exit(1);
     }
     

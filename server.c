@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
         perror("failed to receive from client");
         exit(1);
     }
-
+    
     if(strcmp(buffer, "ftp")){
         int sentYes = sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
         if(sentYes == -1){
