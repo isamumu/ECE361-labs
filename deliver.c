@@ -40,10 +40,27 @@ int main(int argc, char **argv){
     socklen_t addr_len;
     int rv;
     char s[INET6_ADDRSTRLEN];
-    char *ftp_msg = "ftp";
+
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
-        fprintf(stderr,"usage: client hostname\n");
+        printf("usage: client hostname\n");
+        exit(1);
+    }
+
+    char *ip_addrress = argv[2];
+    //int port = atoi(argv[3]);
+
+    printf("please enter filename to transfer: ftp <file name>\n");
+    char ftp[10], file[35];
+    scanf("%s %s", ftp, file);
+
+    if(strcmp(ftp, "ftp")){
+        perror("invalid input: exiting");
+        exit(1);
+    }
+
+    if(access(file, F_OK)!=0){
+        printf("file DNE");
         exit(1);
     }
 
@@ -65,7 +82,7 @@ int main(int argc, char **argv){
 
     if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
         close(sockfd);
-        perror("client: connect");
+        perror("client: cannot connect");
         exit(1);
     }
 
@@ -90,7 +107,7 @@ int main(int argc, char **argv){
     return 0;
 
     // send the ftp message
-    int sentftp = sendto(sockfd, ftp_msg, strlen(ftp_msg), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+    int sentftp = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
     if(sentftp == -1){
         perror("failed to send ftp");
         exit(1);
@@ -108,7 +125,7 @@ int main(int argc, char **argv){
 
     if(strcmp(buffer, "yes")){
         char *success_msg = "A file transfer can start";
-        int sentMsg = sendto(sockfd, ftp_msg, strlen(ftp_msg), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+        int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
     } else {
         exit(1);
     }
