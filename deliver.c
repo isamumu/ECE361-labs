@@ -11,7 +11,7 @@
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
 #define PORT 5901
-
+/*
 void *get_in_addr(struct sockaddr *socket_addr) {
     if (socket_addr->sa_family == AF_INET) {
         return &(((struct sockaddr_in*)socket_addr)->sin_addr);
@@ -19,7 +19,7 @@ void *get_in_addr(struct sockaddr *socket_addr) {
 
     return &(((struct sockaddr_in6*)socket_addr)->sin6_addr);
 }
-
+*/
 int main(int argc, char **argv){
     // the execution command should have the following structure: deliver <server address> <server port number>
     ////////////////////////////////////////////////////////////////////////////////////
@@ -32,12 +32,11 @@ int main(int argc, char **argv){
     ////////////////////////////////////////////////////////////////////////////////////
 
     // Section 1 (see page 35 on Beej's guide for useful tips)
-    int sockfd, numbytes;
-    char buf[MAXDATASIZE];
+    int sockfd;
+    char buf[MAXBUFLEN - 1];
     struct addrinfo hints;
-    struct addrinfo *servinfo, *p;
-    struct sockaddr_storage their_addr;
-    socklen_t addr_len;
+    struct addrinfo *servinfo;
+    socklen_t addrlen;
     int rv;
     char s[INET6_ADDRSTRLEN];
     struct sockaddr_in servaddr;
@@ -66,13 +65,12 @@ int main(int argc, char **argv){
         printf("file found\n");
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
     
-    if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) { //the second argument is the IP addr, third is the port #
+    if ((rv = getaddrinfo(argv[2], argv[3], &hints, &servinfo)) != 0) { //the second argument is the IP addr, third is the port #
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
@@ -93,7 +91,6 @@ int main(int argc, char **argv){
 
     // stuff Beej's guide recommends
     printf("client: connecting... \n");
-    freeaddrinfo(servinfo); // all done with this structure
 
     int sentftp = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servaddr, sizeof servaddr);
     if(sentftp == -1){
@@ -102,22 +99,22 @@ int main(int argc, char **argv){
     } else{
         printf("message sent successfully\n");
     }
-    
+
     // receive a response from the server
-    char buffer[MAXBUFLEN - 1]; //= 0; //not sure what you means by intializing this to 0
-    int received =  recvfrom(sockfd, buffer, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len);
-    
+    addrlen = sizeof(servaddr);
+    int received =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&servaddr, &addrlen);
+    buf[received] = '\0';
+
     if(received == -1){
         perror("failed to receive from server");
         exit(1);
     }
     
     // buf is the buffer to read the information into. Gonna store stuff
-    addr_len = sizeof their_addr;
     
-    if(strcmp(buffer, "yes")){
+    if(strcmp(buf, "yes")){
         char *success_msg = "A file transfer can start";
-        int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+        int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
     } else {
         printf("file transfer may not proceed\n");
         exit(1);

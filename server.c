@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     
     int BUF_SIZE = 50; // len is the maximum length of the buffer which we don't know
 
-    char buffer[BUF_SIZE]; // = 0; // buf is the buffer to read the information into. Gonna store stuff
+    char buffer[BUF_SIZE]; //= '\0'; // buf is the buffer to read the information into. Gonna store stuff
     clilen = sizeof(cliaddr);
 
     int received = recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &cliaddr, &clilen); 
@@ -82,6 +82,8 @@ int main(int argc, char *argv[]){
         exit(1);
     }
     
+    buffer[BUF_SIZE] = '\0';
+
     if(strcmp(buffer, "ftp")){
         int sentYes = sendto(sockfd, "yes", strlen("yes"), 0, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
         if(sentYes == -1){
