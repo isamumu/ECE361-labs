@@ -40,7 +40,7 @@ int main(int argc, char **argv){
     socklen_t addr_len;
     int rv;
     char s[INET6_ADDRSTRLEN];
-
+    struct sockaddr_in servaddr;
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
         printf("usage: client hostname\n");
@@ -62,8 +62,11 @@ int main(int argc, char **argv){
     if(access(file, F_OK)!=0){
         printf("file DNE");
         exit(1);
+    } else{
+        printf("file found\n");
     }
 
+    memset(&servaddr, 0, sizeof(servaddr));
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
@@ -73,56 +76,48 @@ int main(int argc, char **argv){
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
+    
+    // try opening the socket, print an error otherwise
+    if ((sockfd=socket(AF_INET, SOCK_DGRAM, 0))< 0) { 
+        perror("failed to create a socket!!"); 
+        exit(1); 
+    } else{
+        printf("socket creation successful!\n");
+    } 
 
-    // the below also obtains the socket information. With that we can send some info
-    if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-        perror("client: socket");
-        exit(1);
-    }
-
-    if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-        close(sockfd);
-        perror("client: cannot connect");
-        exit(1);
-    }
-
-    if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
-        return 2;
-    }
+    // set server information
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_port = htons(PORT); 
+    servaddr.sin_addr.s_addr = INADDR_ANY; 
 
     // stuff Beej's guide recommends
-    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
-    printf("client: connecting to %s\n", s);
+    printf("client: connecting... \n");
     freeaddrinfo(servinfo); // all done with this structure
 
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
-
-    buf[numbytes] = '\0';
-    printf("client: received '%s'\n",buf);
-    close(sockfd);
-    return 0;
-
-    // send the ftp message
-    int sentftp = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
+    int sentftp = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servaddr, sizeof servaddr);
     if(sentftp == -1){
         perror("failed to send ftp");
         exit(1);
+    } else{
+        printf("message sent successfully\n");
     }
-    char buffer[MAXBUFLEN - 1]; //= 0; //not sure what you means by intializing this to 0
-    // buf is the buffer to read the information into. Gonna store stuff
-    addr_len = sizeof their_addr;
-
+    
     // receive a response from the server
+    char buffer[MAXBUFLEN - 1]; //= 0; //not sure what you means by intializing this to 0
     int received =  recvfrom(sockfd, buffer, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len);
     if(received == -1){
         perror("failed to receive from server");
         exit(1);
     }
 
+    buf[received] = '\0';
+    printf("client: received '%s'\n",buf);
+    // send the ftp message
+    
+    // buf is the buffer to read the information into. Gonna store stuff
+    addr_len = sizeof their_addr;
+    
     if(strcmp(buffer, "yes")){
         char *success_msg = "A file transfer can start";
         int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servinfo, sizeof(servinfo));
@@ -132,4 +127,5 @@ int main(int argc, char **argv){
     
     close(sockfd);
     return 0;
+    
 }
