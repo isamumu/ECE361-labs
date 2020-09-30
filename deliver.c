@@ -10,6 +10,7 @@
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
+#define PORT 5901
 
 void *get_in_addr(struct sockaddr *socket_addr) {
     if (socket_addr->sa_family == AF_INET) {
