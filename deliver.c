@@ -23,8 +23,10 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv){
-    
-    // Section 1 (see page 35 on Beej's guide for useful tips)
+    //===================Section 1=====================================================
+    // (see page 35 on Beej's guide for useful tips)
+
+    int sentftp;
     int sockfd;
     char buf[MAXBUFLEN];
     struct addrinfo *servinfo;
@@ -48,7 +50,7 @@ int main(int argc, char **argv){
     }
 
     if(access(file, F_OK)!=0){
-        printf("file DNE");
+        printf("file DNE\n");
         exit(1);
     } else{
         printf("file found\n");
@@ -72,8 +74,6 @@ int main(int argc, char **argv){
 
     // stuff Beej's guide recommends
     printf("client: connecting... \n");
-
-    int sentftp;
      
     if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, (struct sockaddr *) &servaddr, sizeof servaddr)) == -1){
         perror("failed to send ftp");

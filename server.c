@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define BACKLOG 10 //followed the guide, not sure if this is the correct number
 #define BUF_SIZE 1024
 #define PORT 5901
 
