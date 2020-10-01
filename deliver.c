@@ -11,47 +11,36 @@
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
 #define PORT 5901
-/*
-void *get_in_addr(struct sockaddr *socket_addr) {
-    if (socket_addr->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)socket_addr)->sin_addr);
-    }
 
-    return &(((struct sockaddr_in6*)socket_addr)->sin6_addr);
-}
-*/
+// the execution command should have the following structure: deliver <server address> <server port number>
+////////////////////////////////////////////////////////////////////////////////////
+//// upon execution the client should:                                          ////
+////  1. Ask the user to input a message as follows: ftp <file name>            ////
+////  2. Check the existence of the file                                        ////
+////      a. if the message is "yes", print out "A file transfer can start"     ////
+////      b. else, exit                                                         ////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char **argv){
-    // the execution command should have the following structure: deliver <server address> <server port number>
-    ////////////////////////////////////////////////////////////////////////////////////
-    //// upon execution the client should:                                          ////
-    ////  1. Ask the user to input a message as follows: ftp <file name>            ////
-    ////  2. Check the existence of the file                                        ////
-    ////      a. if the message is "yes", print out "A file transfer can start"     ////
-    ////      b. else, exit                                                         ////
-    ////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////
-
+    
     // Section 1 (see page 35 on Beej's guide for useful tips)
     int sockfd;
-    char buf[MAXBUFLEN - 1];
-    struct addrinfo hints;
+    char buf[MAXBUFLEN];
     struct addrinfo *servinfo;
     socklen_t addrlen;
-    int rv;
-    char s[INET6_ADDRSTRLEN];
     struct sockaddr_in servaddr;
+    char *ftp = "ftp";
+    int port = atoi(argv[2]);
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
         printf("usage: client hostname\n");
         exit(1);
     }
 
-    char *ip_addrress = argv[2];
-    //int port = atoi(argv[3]);
-
     printf("please enter filename to transfer: ftp <file name>\n");
-    char ftp[10], file[35];
-    scanf("%s %s", ftp, file);
+    char key[10], file[35];
+    scanf("%s %s", key, file);
 
     if(strcmp(ftp, "ftp")){
         perror("invalid input: exiting");
@@ -64,16 +53,8 @@ int main(int argc, char **argv){
     } else{
         printf("file found\n");
     }
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
     
-    if ((rv = getaddrinfo(argv[2], argv[3], &hints, &servinfo)) != 0) { //the second argument is the IP addr, third is the port #
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
+    //see getaddrinfo
     
     // try opening the socket, print an error otherwise
     if ((sockfd=socket(AF_INET, SOCK_DGRAM, 0))< 0) { 
@@ -86,35 +67,35 @@ int main(int argc, char **argv){
     // set server information
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(PORT); 
+    servaddr.sin_port = htons(port); 
     servaddr.sin_addr.s_addr = INADDR_ANY; 
 
     // stuff Beej's guide recommends
     printf("client: connecting... \n");
 
-    int sentftp = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servaddr, sizeof servaddr);
-    if(sentftp == -1){
+    int sentftp;
+     
+    if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, (struct sockaddr *) &servaddr, sizeof servaddr)) == -1){
         perror("failed to send ftp");
         exit(1);
     } else{
         printf("message sent successfully\n");
     }
-
+    
     // receive a response from the server
     addrlen = sizeof(servaddr);
-    int received =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&servaddr, &addrlen);
-    buf[received] = '\0';
+    int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&servaddr, &addrlen);
+    
+    buf[nbits] = '\0';
 
-    if(received == -1){
+    //printf("value of buffer: %s\n", buf);
+    if(nbits == -1){
         perror("failed to receive from server");
         exit(1);
     }
     
-    // buf is the buffer to read the information into. Gonna store stuff
-    
-    if(strcmp(buf, "yes")){
-        char *success_msg = "A file transfer can start";
-        int sentMsg = sendto(sockfd, "ftp", strlen("ftp"), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    if(strcmp(buf, "yes") == 0){
+        printf("A file transfer can start\n");
     } else {
         printf("file transfer may not proceed\n");
         exit(1);
