@@ -48,7 +48,7 @@ int main(int argc, char **argv){
 
     // find the IP at the specified port
     if ((dummy = getaddrinfo(argv[1], port, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        perror("bad retrieval");
         return 1;
     }
 
