@@ -29,15 +29,31 @@ int main(int argc, char **argv){
     int sentftp;
     int sockfd;
     char buf[MAXBUFLEN];
-    struct addrinfo *servinfo;
+    struct addrinfo *servinfo, hints;
     socklen_t addrlen;
     struct sockaddr_in servaddr;
+    int dummy;
     char *ftp = "ftp";
     int port = atoi(argv[2]);
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
         printf("usage: client hostname\n");
         exit(1);
+    }
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    // find the IP at the specified port
+    if ((dummy = getaddrinfo(argv[1], port, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return 1;
+    }
+
+    // get socket from server port
+    if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
+        perror("server: socket");
     }
 
     printf("please enter filename to transfer: ftp <file name>\n");
@@ -56,21 +72,6 @@ int main(int argc, char **argv){
         printf("file found\n");
     }
     
-    //see getaddrinfo
-    
-    // try opening the socket, print an error otherwise
-    if ((sockfd=socket(AF_INET, SOCK_DGRAM, 0))< 0) { 
-        perror("failed to create a socket!!"); 
-        exit(1); 
-    } else{
-        printf("socket creation successful!\n");
-    } 
-
-    // set server information
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(port); 
-    servaddr.sin_addr.s_addr = INADDR_ANY; 
 
     // stuff Beej's guide recommends
     printf("client: connecting... \n");

@@ -25,38 +25,42 @@ int main(int argc, char *argv[]){
     
 
     //===================Section 1=====================================================
-    
-    struct sockaddr_in servaddr, cliaddr;
-    
+    struct sockaddr_in cliaddr;
+    struct addrinfo *servinfo, hints; 
     char buffer[BUF_SIZE];
     int sockfd;
+    int dummy;
     socklen_t clilen, addr_size;
     
     int port = atoi(argv[1]); // get the port
     char* yes = "yes";
     char* no = "no";
     
-    // try opening the socket, print an error otherwise
-    if ((sockfd=socket(AF_INET, SOCK_DGRAM, 0))< 0) { 
-        perror("failed to create a socket!!"); 
-        exit(1); 
-    } else{
-        printf("socket creation successful: #%d\n", sockfd);
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE; // use my I
+
+    // obtain IP address
+    if ((dummy = getaddrinfo(NULL, port, &servaddr, &servinfo)) != 0) {
+        perror("cannot get IP address")
+        return 1;
+    }
+
+    if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
+        perror("server: socket");
+    }
+
+    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        close(sockfd);
+        perror("server: bind");
+        continue;
     }
     
-    memset(&servaddr, 0, sizeof(servaddr)); 
+    //finished with finding the IP address
+    freeaddrinfo(servinfo);
+
     memset(&cliaddr, 0, sizeof(cliaddr));
-    
-    // Fill in the server info
-    servaddr.sin_family    = AF_INET; // IPv4 
-    servaddr.sin_addr.s_addr = INADDR_ANY; 
-    servaddr.sin_port = htons(port);
-    
-    // check for bind error
-    if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof servaddr) == -1) {
-        perror("failed to bind!!");
-        exit(1);
-    } 
     
     printf("one moment please...\n");
     clilen = sizeof(cliaddr);
