@@ -34,7 +34,7 @@ int main(int argc, char **argv){
     struct sockaddr_storage server_sock; // connector address info
     int dummy;
     char *ftp = "ftp";
-    int port = argv[2];
+    char * port = argv[2];
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
         printf("usage: client hostname\n");
