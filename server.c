@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
     //finished with finding the IP address
     freeaddrinfo(servinfo);
     
-    printf("one moment please...\n");
+    printf("one moment please.....\n");
     clilen = sizeof(struct sockaddr_storage);
 
     int nbits = recvfrom(sockfd, (char*)buffer, BUF_SIZE, 0, (struct sockaddr *) &client_sock, &clilen); 
