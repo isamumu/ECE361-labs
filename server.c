@@ -43,6 +43,7 @@ int main(int argc, char *argv[]){
     hints.ai_protocol = IPPROTO_UDP;
     hints.ai_flags = AI_PASSIVE; // use my I
 
+    print("the port is: %d\n", port);
     // obtain IP address
     if ((dummy = getaddrinfo(NULL, port, &servaddr, &servinfo)) != 0) {
         perror("cannot get IP address")
