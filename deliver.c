@@ -95,7 +95,7 @@ int main(int argc, char **argv){
         perror("failed to receive from server");
         exit(1);
     }
-    print("nbits: %d\n", nbits);
+    printf("nbits: %d\n", nbits);
     if(strcmp(buf, "yes") == 0){
         printf("A file transfer can start\n");
     } else {
