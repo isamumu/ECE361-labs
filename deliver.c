@@ -31,7 +31,7 @@ int main(int argc, char **argv){
     char buf[MAXBUFLEN];
     struct addrinfo *servinfo, hints;
     socklen_t addrlen;
-    struct sockaddr_in servaddr;
+    struct sockaddr_storage server_sock; // connector address info
     int dummy;
     char *ftp = "ftp";
     int port = atoi(argv[2]);
@@ -43,7 +43,8 @@ int main(int argc, char **argv){
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
 
     // find the IP at the specified port
     if ((dummy = getaddrinfo(argv[1], port, &hints, &servinfo)) != 0) {
@@ -76,7 +77,7 @@ int main(int argc, char **argv){
     // stuff Beej's guide recommends
     printf("client: connecting... \n");
      
-    if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, (struct sockaddr *) &servaddr, sizeof servaddr)) == -1){
+    if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, servinfo->ai_addr, servinfo->ai_addrlen)) == -1){
         perror("failed to send ftp");
         exit(1);
     } else{
@@ -84,8 +85,8 @@ int main(int argc, char **argv){
     }
     
     // receive a response from the server
-    addrlen = sizeof(servaddr);
-    int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&servaddr, &addrlen);
+    addrlen = sizeof(struct sockaddr_storage);
+    int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&server_sock, &addrlen);
     
     buf[nbits] = '\0';
 
