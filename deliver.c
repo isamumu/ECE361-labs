@@ -44,7 +44,7 @@ int main(int argc, char **argv){
     char key[10], file[35];
     scanf("%s %s", key, file);
 
-    if(strcmp(ftp, "ftp")){
+    if(strcmp(key, "ftp")){
         perror("invalid input: exiting");
         exit(1);
     }
