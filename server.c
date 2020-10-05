@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 
     printf("the port is: %d\n", port);
     // obtain IP address
-    if ((dummy = getaddrinfo(NULL, port, &servaddr, &servinfo)) != 0) {
+    if ((dummy = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
         perror("cannot get IP address");
         return 1;
     }
