@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     int dummy;
     socklen_t clilen, addr_size;
     
-    char * port = argv[2]; // get the port
+    char * port = argv[1]; // get the port
     char* yes = "yes";
     char* no = "no";
     
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
     hints.ai_protocol = IPPROTO_UDP;
     hints.ai_flags = AI_PASSIVE; // use my I
 
-    printf("the port is: %d\n", port);
+    printf("the port is: %d\n", atoi[port]);
     // obtain IP address
     if ((dummy = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
         perror("cannot get IP address");
