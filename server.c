@@ -57,7 +57,6 @@ int main(int argc, char *argv[]){
     if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
         close(sockfd);
         perror("server: bind");
-        continue;
     }
     
     //finished with finding the IP address
