@@ -29,15 +29,32 @@ int main(int argc, char **argv){
     int sentftp;
     int sockfd;
     char buf[MAXBUFLEN];
-    struct addrinfo *servinfo;
+    struct addrinfo *servinfo, hints;
     socklen_t addrlen;
-    struct sockaddr_in servaddr;
+    struct sockaddr_storage server_sock; // connector address info
+    int dummy;
     char *ftp = "ftp";
-    int port = atoi(argv[2]);
+    char * port = argv[2];
 
     if (argc != 3) { //input format: deliver <server address> <server port number>
         printf("usage: client hostname\n");
         exit(1);
+    }
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
+
+    // find the IP at the specified port
+    if ((dummy = getaddrinfo(argv[1], port, &hints, &servinfo)) != 0) {
+        perror("bad retrieval");
+        return 1;
+    }
+
+    // get socket from server port
+    if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
+        perror("server: socket");
     }
 
     printf("please enter filename to transfer: ftp <file name>\n");
@@ -56,26 +73,11 @@ int main(int argc, char **argv){
         printf("file found\n");
     }
     
-    //see getaddrinfo
-    
-    // try opening the socket, print an error otherwise
-    if ((sockfd=socket(AF_INET, SOCK_DGRAM, 0))< 0) { 
-        perror("failed to create a socket!!"); 
-        exit(1); 
-    } else{
-        printf("socket creation successful!\n");
-    } 
-
-    // set server information
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_port = htons(port); 
-    servaddr.sin_addr.s_addr = INADDR_ANY; 
 
     // stuff Beej's guide recommends
     printf("client: connecting... \n");
      
-    if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, (struct sockaddr *) &servaddr, sizeof servaddr)) == -1){
+    if((sentftp = sendto(sockfd, (const char *)ftp, strlen(ftp), 0, servinfo->ai_addr, servinfo->ai_addrlen)) == -1){
         perror("failed to send ftp");
         exit(1);
     } else{
@@ -83,8 +85,8 @@ int main(int argc, char **argv){
     }
     
     // receive a response from the server
-    addrlen = sizeof(servaddr);
-    int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&servaddr, &addrlen);
+    addrlen = sizeof(struct sockaddr_storage);
+    int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&server_sock, &addrlen);
     
     buf[nbits] = '\0';
 
@@ -93,7 +95,7 @@ int main(int argc, char **argv){
         perror("failed to receive from server");
         exit(1);
     }
-    
+    printf("nbits: %d\n", nbits);
     if(strcmp(buf, "yes") == 0){
         printf("A file transfer can start\n");
     } else {
