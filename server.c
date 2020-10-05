@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     int dummy;
     socklen_t clilen, addr_size;
     
-    int port = atoi(argv[1]); // get the port
+    char * port = argv[1]; // get the port
     char* yes = "yes";
     char* no = "no";
     
