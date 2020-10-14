@@ -110,13 +110,24 @@ int main(int argc, char **argv){
         exit(1);
     }
 
+    //===================Section 2&3=====================================================
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// In this section, you will implement a client and a server to transfer a file.                       /////
+    ///// Unlike simply receiving a message and sending it back, you are required to have                     /////
+    ///// a specific packet format and implement acknowledge for the simple file transfer using UDP socket.   /////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Section 2: How long is the measured round trip time? (about 7 microseconds for lab1)
     int RTT = ((double) (end - start)) / CLOCKS_PER_SEC *1000000; // calculate RTT in micro seconds
-    printf("RTT = %d", RTT);
+    printf("RTT = %d microseconds \n", RTT);
+
+    // Section 3: File transfer
+
     
+
     close(sockfd);
     return 0;
 
-    //===================Section 2&3=====================================================
-    // Section 2: How long is the measured round trip time?
+    
     
 }
