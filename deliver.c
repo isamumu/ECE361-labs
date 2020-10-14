@@ -111,7 +111,7 @@ int main(int argc, char **argv){
     }
 
     RTT = ((double) (end - start)) / CLOCKS_PER_SEC; // calculate RTT in seconds
-    print("RTT = %d", RTT);
+    printf("RTT = %d", RTT);
     
     close(sockfd);
     return 0;
