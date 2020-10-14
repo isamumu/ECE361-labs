@@ -7,6 +7,7 @@
 #include <arpa/inet.h> 
 #include <netinet/in.h>
 #include <netdb.h>
+#include <time.h>
 
 #define BUF_SIZE 1024
 #define PORT 5901
@@ -18,7 +19,6 @@
 ////  2. Receive a message from the client                                      ////
 ////      a. if the message is "ftp", reply with a message "yes" to the client. ////
 ////      b. else, reply with a message "no" to the client                      ////
-////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[]){
