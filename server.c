@@ -11,6 +11,8 @@
 #include <packet.h>
 
 #define BUF_SIZE 1024
+#define ACK "ACK"
+#define UNACK "UNACK"
 
 // the execution command should have the following structure: server <UDP listen port>
 ////////////////////////////////////////////////////////////////////////////////////

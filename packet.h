@@ -1,5 +1,3 @@
-#define ACK "ACK"
-#define UNACK "UNACK"
 #define BYTE_LIMIT 1000
 #define BUF_SIZE 1024
 
@@ -48,6 +46,13 @@ int getBytes(char* filename){
 
 }
 
+char *formatPacket(struct packet*){
+	char* packetString;
+
+	return packetString;
+
+}
+
 struct packet* fragment_this(char* filename){
 	
 	FILE *fp; // need a file pointer to open a file. 
@@ -58,7 +63,6 @@ struct packet* fragment_this(char* filename){
 	int fileSize = getBytes(filename);
 
 	numFrags = (fileSize/BYTE_LIMIT) + 1; // plus 1 bc we have at least 1 frag
-	char buffer[BUF_SIZE]; // going to receive ACK and NACK here
 	char *packets[numFrags] = malloc(sizeof(char*) * numFrags); // to store packets
 
 	// Q: why is it a char pointer?
@@ -85,6 +89,7 @@ struct packet* fragment_this(char* filename){
 
 		// bc the array stores char pointers, we must allocate space for each packet string
 		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
+
 		// TODO: store the packet here
 		// ... 
 		// ...
