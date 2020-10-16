@@ -8,9 +8,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
+#include <packet.h>
 
 #define BUF_SIZE 1024
-#define PORT 5901
+#define ACK "ACK"
+#define UNACK "UNACK"
 
 // the execution command should have the following structure: server <UDP listen port>
 ////////////////////////////////////////////////////////////////////////////////////

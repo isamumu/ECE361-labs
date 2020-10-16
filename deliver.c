@@ -8,10 +8,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
+#include <packet.h>
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
-#define PORT 5901
+#define BITE_LIMIT 1000
 
 // the execution command should have the following structure: deliver <server address> <server port number>
 ////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +62,7 @@ int main(int argc, char **argv){
     }
 
     printf("please enter filename to transfer: ftp <file name>\n");
-    char key[10], file[35];
+    char key[10], file[35]; //HERE FILE CONTAINS THE .txt or .img
     scanf("%s %s", key, file);
 
     if(strcmp(key, "ftp")){
@@ -122,12 +123,18 @@ int main(int argc, char **argv){
     printf("RTT = %d microseconds \n", RTT);
 
     // Section 3: File transfer
-
+    // if the file is larger than 1000 bites, fragment it before transmission
     
+    //step 1. fragment the file, if needed.
+
+    //step 2. implement the packet format for each fragment.
+
+    //step 3. iteratively send each packet (1 fragment) until none are left
+
+    //step 4. implement stop-and-wait i.e. don't proceed to until an ACK
+
 
     close(sockfd);
     return 0;
-
-    
     
 }
