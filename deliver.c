@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
-#include <packet.h>
+#include "packet.h"
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
