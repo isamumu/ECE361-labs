@@ -20,10 +20,10 @@
 
 struct packet {
 	unsigned int total_frag;
-	unsigned int frag_no;
-	unsigned int size;
-	char* filename;
-	char filedata[1000];
+	unsigned int frag_no; //sequence number starting from 1
+	unsigned int size; //set to size of data (0, 1000)
+	char* filename; 
+	char filedata[1000]; //binary
 };
 
 int getBytes(char* filename){
@@ -48,21 +48,59 @@ int getBytes(char* filename){
 
 char *formatPacket(struct packet*){
 	char* packetString;
-
+	
 	return packetString;
 
 }
 
-struct packet* fragment_this(char* filename){
+char *formatPacket(struct packet * myPacket, int data_size) {
+	char * packetString;
+	char * temp[100];
+	memset(packetString, 0, BUF_SIZE);
+	// order: total_frag, frag_no, size, filename, filedata
+	sprintf(packetString, "%d:%d:%d:%s:", myPacket->total_frag, myPacket->frag_no, myPacket->size, myPacket->filename);
+	int strptr = strlen(packetString);
+	memcpy(packetString + strptr, myPacket->filedata, sizeof(char) * data_size);
+	return packetString;
+	
+}
+
+struct packet *formatString(const char * buf) {
+	struct packet *packet_rcv;
+	char * temp = strtok(buf, ":");
+	int strptr = strlen(temp);
+	packet_rcv->total_frag = atoi(temp);
+	
+	temp = strtok(buf + strptr, ":");
+	packet_rcv->frag_no = atoi(temp);
+	strptr += strlen(temp);
+
+	temp = strtok(buf + strptr, ":");
+	packet_rcv->size = atoi(temp);
+	strptr += strlen(temp);
+
+	temp = strtok(buf + strptr, ":");
+	packet_rcv->filename = temp;
+	strptr += strlen(temp);
+
+	temp = strtok(buf + strptr, ":");
+	packet_rcv->filedata = temp;
+
+	return packet_rcv;
+			
+}
+
+
+struct packet* fragment_this(char* filename, int * numFrag){
 	
 	FILE *fp; // need a file pointer to open a file. 
 	fp = fopen(filename "r");
 
 	// see if we require fragmenting
-	int numFrags;
+	//int numFrags;
 	int fileSize = getBytes(filename);
 
-	numFrags = (fileSize/BYTE_LIMIT) + 1; // plus 1 bc we have at least 1 frag
+	numFrags = (fileSize/BYTE_LIMIT) + 1; // plus 1 bc we have at least 1 frag	
 	char *packets[numFrags] = malloc(sizeof(char*) * numFrags); // to store packets
 
 	// Q: why is it a char pointer?
@@ -71,7 +109,7 @@ struct packet* fragment_this(char* filename){
 
 	for(int packNo = 0; packNo < numFrags; packNo++){ // run at least once
 		struct packet paketto;	
-		memset(packet.filedata, 0, sizeof(char) * (BYTE_LIMIT));
+		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
 		FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
@@ -79,22 +117,55 @@ struct packet* fragment_this(char* filename){
 		paketto.frag_no = packNo + 1;
 		
 		if((packNo+1) != numFrags){
-			packet.size = BYTE_LIMIT;
+			paketto.size = BYTE_LIMIT;
 
 		} else {
-			fseek(fp, 0L, SEEK_END); 
+			fseek(fp, 0, SEEK_END); 
 			// calculating the size of the file 
 			paketto.size = (ftell(fp) - 1) % 1000 + 1; // off by 1 corner case
 		}
 
 		// bc the array stores char pointers, we must allocate space for each packet string
 		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
-
+		
 		// TODO: store the packet here
-		// ... 
-		// ...
+		packets[packNo] = formatPacket(paketto, paketto.size);	
 
 	}
 
+	return packets;
 
 }
+
+void free_fragments(struct packet * packets, int numFrag) {
+	for (int i = 0; i < numFrag; i++) {
+		free(packets[i]);
+	}
+	free(packets);
+	packets = NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
