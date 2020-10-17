@@ -46,12 +46,13 @@ int getBytes(char* filename){
 
 }
 
+/*
 char *formatPacket(struct packet*){
 	char* packetString;
 	
 	return packetString;
 
-}
+}*/
 
 char *formatPacket(struct packet * myPacket, int data_size) {
 	char * packetString;
@@ -65,7 +66,7 @@ char *formatPacket(struct packet * myPacket, int data_size) {
 	
 }
 
-struct packet *formatString(const char * buf) {
+struct packet *formatString(char * buf) {
 	struct packet *packet_rcv;
 	char * temp = strtok(buf, ":");
 	int strptr = strlen(temp);
@@ -83,25 +84,26 @@ struct packet *formatString(const char * buf) {
 	packet_rcv->filename = temp;
 	strptr += strlen(temp);
 
-	temp = strtok(buf + strptr, ":");
-	packet_rcv->filedata = temp;
+	//temp = strtok(buf + strptr, ":");
+	packet_rcv->filedata = (char *)(buf + strptr);
 
 	return packet_rcv;
 			
 }
 
 
-struct packet* fragment_this(char* filename, int * numFrag){
+struct packet* fragment_this(char* filename, int * fragNum){
 	
 	FILE *fp; // need a file pointer to open a file. 
-	fp = fopen(filename "r");
+	fp = fopen(filename, "r");
 
 	// see if we require fragmenting
 	//int numFrags;
 	int fileSize = getBytes(filename);
 
-	numFrags = (fileSize/BYTE_LIMIT) + 1; // plus 1 bc we have at least 1 frag	
-	char *packets[numFrags] = malloc(sizeof(char*) * numFrags); // to store packets
+	*fragNum = (fileSize/BYTE_LIMIT) + 1; // plus 1 bc we have at least 1 frag	
+	int numFrags = *fragNum;
+	char **packets = malloc(sizeof(char*) * numFrags); // to store packets
 
 	// Q: why is it a char pointer?
 	// A: because, each pointer to a packet is technically a pointer to a char pointer
@@ -129,7 +131,7 @@ struct packet* fragment_this(char* filename, int * numFrag){
 		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
 		
 		// TODO: store the packet here
-		packets[packNo] = formatPacket(paketto, paketto.size);	
+		packets[packNo] = formatPacket(&paketto, paketto.size);	
 
 	}
 

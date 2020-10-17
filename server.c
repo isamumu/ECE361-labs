@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
-#include <packet.h>
+#include "packet.h"
 
 #define BUF_SIZE 1024
 #define ACK "ACK"
