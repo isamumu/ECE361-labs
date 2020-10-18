@@ -113,7 +113,7 @@ int main(int argc, char **argv){
         printf("file transfer may not proceed\n");
         exit(1);
     }
-
+ 
     //===================Section 2&3=====================================================
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// In this section, you will implement a client and a server to transfer a file.                       /////
@@ -127,7 +127,7 @@ int main(int argc, char **argv){
 
     // Section 3: File transfer
     // if the file is larger than 1000 bites, fragment it before transmission
-    
+  
     //step 1. fragment the file, if needed.
     //step 2. implement the packet format for each fragment.
     //step 3. iteratively send each packet (1 fragment) until none are left
@@ -136,35 +136,34 @@ int main(int argc, char **argv){
     //numFrag stores the total number of fragmentation
     int numFrag;
     int sendbits;
-    //packets gets the lists of packets returned from fragment_this function
-    struct packet *packets = fragment_this(file, &numFrag);
- 
+    char **packets = fragment_this(file, &numFrag); //get the fragmented packets in string
     memset(buf, 0, sizeof(char) * MAXBUFLEN);
     //send each packet until none is left
     for (int packNo = 0; packNo < numFrag; packNo++) {
         printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
-        if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
-            perror("failed to send packet #%d\n", packNo + 1);
+        if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+            printf("failed to send packet #%d\n", packNo + 1); 
             exit(1);
-        }
-	//maybe it's better to declare a new buffer that's smaller in size?
+        }  
+   	
+	printf("Sent packet %d (total: %d)\n", packNo + 1, numFrag);
 	memset(buf, 0, sizeof(char) * MAXBUFLEN);
-	if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen == -1) {
-	    perror("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
+	if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen) == -1) {
+	    printf("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
 	    exit(1);
 	}
-	struct packet *packet_rcv = formatString(buf);
 	
-	if (strcmp(packet_rcv->filename, file) == 0 && (packet_rcv->frag_no == packNo + 1) && strcmp(packet_rcv->filedata, ACK) == 0) {
+	if (strcmp(buf, ACK) == 0) {
 	    printf("packet #%d recieved\n", packNo + 1);
 	}
-	else {
-	    perror("packet #%d not recieved\n", packNo + 1);
-	    packNo--;
+	else { //if NACK is recieved keep the packNo unchanged keep sending the same packet
+	    printf("packet #%d not recieved\n", packNo + 1);
+	    packNo--;  
 	}
     }
-    
+    //free the char array for the packets 
     free_fragments(packets, numFrag);
+    printf("transmission done!\n");
 
     close(sockfd);
     return 0;
