@@ -66,6 +66,7 @@ char *formatPacket(struct packet * myPacket, int data_size) {
 	
 }
 
+/*
 struct packet *formatString(char * buf) {
 	struct packet *packet_rcv;
 	char * temp = strtok(buf, ":");
@@ -90,9 +91,10 @@ struct packet *formatString(char * buf) {
 	return packet_rcv;
 			
 }
+*/
 
 
-struct packet* fragment_this(char* filename, int * fragNum){
+char* fragment_this(char* filename, int * fragNum){
 	
 	FILE *fp; // need a file pointer to open a file. 
 	fp = fopen(filename, "r");
@@ -146,28 +148,3 @@ void free_fragments(struct packet * packets, int numFrag) {
 	free(packets);
 	packets = NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

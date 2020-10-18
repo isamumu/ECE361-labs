@@ -12,7 +12,9 @@
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
-#define BITE_LIMIT 1000
+#define BYTE_LIMIT 1000
+#define ACK "ACK"
+#define NACK "NACK"
 
 // the execution command should have the following structure: deliver <server address> <server port number>
 ////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +97,7 @@ int main(int argc, char **argv){
     addrlen = sizeof(struct sockaddr_storage);
     int nbits =  recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&server_sock, &addrlen);
     
+    //problems may occur here
     buf[nbits] = '\0';
 
     //printf("value of buffer: %s\n", buf);
@@ -105,7 +108,6 @@ int main(int argc, char **argv){
     printf("nbits: %d\n", nbits);
     if(strcmp(buf, "yes") == 0){
         printf("A file transfer can start\n");
-        
         end = clock();
     } else {
         printf("file transfer may not proceed\n");
@@ -127,13 +129,42 @@ int main(int argc, char **argv){
     // if the file is larger than 1000 bites, fragment it before transmission
     
     //step 1. fragment the file, if needed.
-
     //step 2. implement the packet format for each fragment.
-
     //step 3. iteratively send each packet (1 fragment) until none are left
-
     //step 4. implement stop-and-wait i.e. don't proceed to until an ACK
 
+    //numFrag stores the total number of fragmentation
+    int numFrag;
+    int sendbits;
+    //packets gets the lists of packets returned from fragment_this function
+    struct packet *packets = fragment_this(file, &numFrag);
+ 
+    memset(buf, 0, sizeof(char) * MAXBUFLEN);
+    //send each packet until none is left
+    for (int packNo = 0; packNo < numFrag; packNo++) {
+        printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
+        if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
+            perror("failed to send packet #%d\n", packNo + 1);
+            exit(1);
+        }
+	//maybe it's better to declare a new buffer that's smaller in size?
+        memset(buf, 0, sizeof(char) * MAXBUFLEN);
+        if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen == -1) {
+            perror("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
+            exit(1);
+        }
+        struct packet *packet_rcv = formatString(buf);
+        
+        if (strcmp(packet_rcv->filename, file) == 0 && (packet_rcv->frag_no == packNo + 1) && strcmp(packet_rcv->filedata, ACK) == 0) {
+            printf("packet #%d recieved\n", packNo + 1);
+        }
+        else {
+            perror("packet #%d not recieved\n", packNo + 1);
+            packNo--;
+        }
+    }
+    
+    free_fragments(packets, numFrag);
 
     close(sockfd);
     return 0;
