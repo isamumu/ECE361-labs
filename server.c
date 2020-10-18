@@ -121,15 +121,17 @@ int main(int argc, char *argv[]){
                 perror("error occur when writing");
                 exit(1);
             }
-            //break the while loop when all packets are recieved
-            if (new_packet->frag_no = new_packet->total_frag) {
-                break;
-            }	    
+            
             //send ACK after data proccessed
             if (sendbits = sendto(sockfd, (const char *)ACK, strlen(ACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
                 perror("failed to send ACK");
             exit(1);
             }
+
+            //break the while loop when all packets are recieved
+            if (new_packet->frag_no == new_packet->total_frag) {
+                break;
+            }	    
         }
         else { //if not send NACK to the client
             if (sendbits = sendto(sockfd, (const char *)NACK, strlen(NACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
