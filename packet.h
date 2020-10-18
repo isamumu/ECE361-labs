@@ -54,28 +54,49 @@ char *formatPacket(struct packet*){
 
 }*/
 
-char *formatPacket(struct packet * myPacket, int data_size) {
-	char * packetString;
-	char * temp[100];
-	memset(packetString, 0, BUF_SIZE);
-	// order: total_frag, frag_no, size, filename, filedata
-	sprintf(packetString, "%d:%d:%d:%s:", myPacket->total_frag, myPacket->frag_no, myPacket->size, myPacket->filename);
-	int strptr = strlen(packetString);
-	memcpy(packetString + strptr, myPacket->filedata, sizeof(char) * data_size);
+char *formatPacket(struct packet * myPacket, char *packetString) {
+	int strptr = sprintf(packetString, "%d:%d:%d:%s:", myPacket->total_frag, myPacket->frag_no, myPacket->size, myPacket->filename);
+	memcpy(packetString + strptr, myPacket->filedata, myPacket->size);
 	return packetString;
 	
 }
 
+<<<<<<< HEAD
 /*
+=======
+void print_packet(struct packet * myPacket) {
+	printf("total_frag: %d\n", myPacket->total_frag);
+	printf("frag_no: %d\n", myPacket->frag_no);
+	printf("size: %d\n", myPacket->size);
+	printf("filename: %s\n", myPacket->filename);
+	printf("filedata: %s\n", myPacket->filedata);
+}
+
+
+>>>>>>> 4f79120910bcc7d2db526072f8d09a97fd21e1b7
 struct packet *formatString(char * buf) {
-	struct packet *packet_rcv;
-	char * temp = strtok(buf, ":");
-	int strptr = strlen(temp);
-	packet_rcv->total_frag = atoi(temp);
-	
-	temp = strtok(buf + strptr, ":");
+	printf("i'm here?\n");
+	struct packet *packet_rcv = malloc(sizeof(struct packet));
+	char * myString[5];
+	int i = 0;
+	char * temp = strtok(buf, ":"); //temp variable to store the sections of string
+	//int strptr = strlen(temp); //ptr to the buf
+	//packet_rcv->total_frag = atoi(temp);
+	//printf("total_frag: %d\n", packet_rcv->total_frag);
+	while (temp != NULL) {
+		myString[i] = temp;
+		temp = strtok(NULL, ":");
+		i++;
+	}
+	packet_rcv->total_frag = atoi(myString[0]);
+	packet_rcv->frag_no = atoi(myString[1]);
+        packet_rcv->size = atoi(myString[2]);
+	packet_rcv->filename = myString[3];
+	memcpy(packet_rcv->filedata, myString[4], packet_rcv->size);
+	/*temp = strtok(buf + strptr, ":");
 	packet_rcv->frag_no = atoi(temp);
 	strptr += strlen(temp);
+	printf("frag_no: %d\n", packet_rcv->frag_no);
 
 	temp = strtok(buf + strptr, ":");
 	packet_rcv->size = atoi(temp);
@@ -85,16 +106,20 @@ struct packet *formatString(char * buf) {
 	packet_rcv->filename = temp;
 	strptr += strlen(temp);
 
-	//temp = strtok(buf + strptr, ":");
-	packet_rcv->filedata = (char *)(buf + strptr);
-
+	memcpy(packet_rcv->filedata, &buf[strptr], packet_rcv->size);
+	*/
+	print_packet(packet_rcv);
 	return packet_rcv;
 			
 }
 */
 
 
+<<<<<<< HEAD
 char* fragment_this(char* filename, int * fragNum){
+=======
+char** fragment_this(char* filename, int * fragNum){ //char *
+>>>>>>> 4f79120910bcc7d2db526072f8d09a97fd21e1b7
 	
 	FILE *fp; // need a file pointer to open a file. 
 	fp = fopen(filename, "r");
@@ -112,28 +137,37 @@ char* fragment_this(char* filename, int * fragNum){
 	// remember: in C, a string is basically a char pointer to the first character
 
 	for(int packNo = 0; packNo < numFrags; packNo++){ // run at least once
+		printf("Creating packNo %d\n", packNo + 1);
 		struct packet paketto;	
 		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
+		printf("i'm here\n");
 		FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
 		paketto.total_frag = numFrags;
 		paketto.frag_no = packNo + 1;
+		paketto.filename = filename;
+		fread(paketto.filedata, sizeof(char), BYTE_LIMIT, fp);
 		
 		if((packNo+1) != numFrags){
 			paketto.size = BYTE_LIMIT;
 
 		} else {
+			printf("i'm here too\n");
 			fseek(fp, 0, SEEK_END); 
 			// calculating the size of the file 
 			paketto.size = (ftell(fp) - 1) % 1000 + 1; // off by 1 corner case
 		}
+		print_packet(&paketto);
 
 		// bc the array stores char pointers, we must allocate space for each packet string
+		printf("mallocing space from packNo %d\n", packNo + 1);
 		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
 		
+		printf("Converting packNo %d\n", packNo + 1);
 		// TODO: store the packet here
-		packets[packNo] = formatPacket(&paketto, paketto.size);	
+		formatPacket(&paketto, packets[packNo]);
+		//packets[packNo] = formatPacket(&paketto);	
 
 	}
 
@@ -141,7 +175,7 @@ char* fragment_this(char* filename, int * fragNum){
 
 }
 
-void free_fragments(struct packet * packets, int numFrag) {
+void free_fragments(char** packets, int numFrag) {
 	for (int i = 0; i < numFrag; i++) {
 		free(packets[i]);
 	}
