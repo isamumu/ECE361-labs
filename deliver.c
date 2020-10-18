@@ -11,7 +11,7 @@
 #include "packet.h"
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
-#define MAXBUFLEN 100000
+#define MAXBUFLEN 4096
 #define BYTE_LIMIT 1000
 #define ACK "ACK"
 #define NACK "NACK"

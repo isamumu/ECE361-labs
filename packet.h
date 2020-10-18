@@ -1,5 +1,6 @@
 #define BYTE_LIMIT 1000
 #define BUF_SIZE 1024
+#define MAXBUFLEN 4096
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// The total_frag field indicates the total number of fragments of the file.   ///
@@ -154,7 +155,7 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 
 		// bc the array stores char pointers, we must allocate space for each packet string
 		printf("mallocing space from packNo %d\n", packNo + 1);
-		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
+		packets[packNo] = malloc(MAXBUFLEN * sizeof(char)); 
 		
 		printf("Converting packNo %d\n", packNo + 1);
 		// TODO: store the packet here
