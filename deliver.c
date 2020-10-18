@@ -16,6 +16,8 @@
 #define ACK "ACK"
 #define NACK "NACK"
 
+// IP Address: 128.100.13.170 or .180
+
 // the execution command should have the following structure: deliver <server address> <server port number>
 ////////////////////////////////////////////////////////////////////////////////////
 //// upon execution the client should:                                          ////
@@ -111,7 +113,6 @@ int main(int argc, char **argv){
         end = clock();
     } else {
         printf("file transfer may not proceed\n");
-        exit(1);
     }
  
     //===================Section 2&3=====================================================
@@ -138,30 +139,13 @@ int main(int argc, char **argv){
     int sendbits;
     char **packets = fragment_this(file, &numFrag); //get the fragmented packets in string
     memset(buf, 0, sizeof(char) * MAXBUFLEN);
+    
     //send each packet until none is left
     for (int packNo = 0; packNo < numFrag; packNo++) {
         printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
         if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
             printf("failed to send packet #%d\n", packNo + 1); 
             exit(1);
-<<<<<<< HEAD
-        }
-	//maybe it's better to declare a new buffer that's smaller in size?
-        memset(buf, 0, sizeof(char) * MAXBUFLEN);
-        if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen == -1) {
-            perror("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
-            exit(1);
-        }
-        struct packet *packet_rcv = formatString(buf);
-        
-        if (strcmp(packet_rcv->filename, file) == 0 && (packet_rcv->frag_no == packNo + 1) && strcmp(packet_rcv->filedata, ACK) == 0) {
-            printf("packet #%d recieved\n", packNo + 1);
-        }
-        else {
-            perror("packet #%d not recieved\n", packNo + 1);
-            packNo--;
-        }
-=======
         }  
    	
 	printf("Sent packet %d (total: %d)\n", packNo + 1, numFrag);
@@ -178,7 +162,6 @@ int main(int argc, char **argv){
 	    printf("packet #%d not recieved\n", packNo + 1);
 	    packNo--;  
 	}
->>>>>>> 4f79120910bcc7d2db526072f8d09a97fd21e1b7
     }
     //free the char array for the packets 
     free_fragments(packets, numFrag);
