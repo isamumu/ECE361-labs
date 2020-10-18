@@ -61,9 +61,6 @@ char *formatPacket(struct packet * myPacket, char *packetString) {
 	
 }
 
-<<<<<<< HEAD
-/*
-=======
 void print_packet(struct packet * myPacket) {
 	printf("total_frag: %d\n", myPacket->total_frag);
 	printf("frag_no: %d\n", myPacket->frag_no);
@@ -73,7 +70,6 @@ void print_packet(struct packet * myPacket) {
 }
 
 
->>>>>>> 4f79120910bcc7d2db526072f8d09a97fd21e1b7
 struct packet *formatString(char * buf) {
 	printf("i'm here?\n");
 	struct packet *packet_rcv = malloc(sizeof(struct packet));
@@ -115,11 +111,7 @@ struct packet *formatString(char * buf) {
 */
 
 
-<<<<<<< HEAD
-char* fragment_this(char* filename, int * fragNum){
-=======
 char** fragment_this(char* filename, int * fragNum){ //char *
->>>>>>> 4f79120910bcc7d2db526072f8d09a97fd21e1b7
 	
 	FILE *fp; // need a file pointer to open a file. 
 	fp = fopen(filename, "r");
