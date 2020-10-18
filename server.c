@@ -108,7 +108,7 @@ int main(int argc, char *argv[]){
     	} 
 	//create a new packet
 	struct packet * new_packet = formatString(buffer);
-        printf("received packet #%d\n", new_packet->frag_no);
+    printf("received packet #%d\n", new_packet->frag_no);
 	 
 	//check to see if the packet number is matching the one that we are waiting for
 	if (new_packet->frag_no == curr_packet) { //if matched proccess the data
