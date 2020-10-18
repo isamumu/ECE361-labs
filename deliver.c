@@ -113,7 +113,7 @@ int main(int argc, char **argv){
         printf("file transfer may not proceed\n");
         exit(1);
     }
-
+ 
     //===================Section 2&3=====================================================
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// In this section, you will implement a client and a server to transfer a file.                       /////
@@ -127,7 +127,7 @@ int main(int argc, char **argv){
 
     // Section 3: File transfer
     // if the file is larger than 1000 bites, fragment it before transmission
-    
+  
     //step 1. fragment the file, if needed.
     //step 2. implement the packet format for each fragment.
     //step 3. iteratively send each packet (1 fragment) until none are left
@@ -142,10 +142,11 @@ int main(int argc, char **argv){
     for (int packNo = 0; packNo < numFrag; packNo++) {
         printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
         if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-            printf("failed to send packet #%d\n", packNo + 1);
+            printf("failed to send packet #%d\n", packNo + 1); 
             exit(1);
-        }
-
+        }  
+   	
+	printf("Sent packet %d (total: %d)\n", packNo + 1, numFrag);
 	memset(buf, 0, sizeof(char) * MAXBUFLEN);
 	if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen) == -1) {
 	    printf("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
@@ -157,10 +158,10 @@ int main(int argc, char **argv){
 	}
 	else { //if NACK is recieved keep the packNo unchanged keep sending the same packet
 	    printf("packet #%d not recieved\n", packNo + 1);
-	    packNo--;
+	    packNo--;  
 	}
     }
-    //free the char array for the packets
+    //free the char array for the packets 
     free_fragments(packets, numFrag);
 
 

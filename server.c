@@ -32,25 +32,25 @@ int main(int argc, char *argv[]){
     struct addrinfo *servinfo, hints; 
     char buffer[BUF_SIZE];
     int sockfd;
-    int dummy;
+    int dummy; 
     socklen_t clilen, addr_size;
     
     char * port = argv[1]; // get the port
     char* yes = "yes";
-    char* no = "no";
-    
+    char* no = "no"; 
+     
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
     hints.ai_flags = AI_PASSIVE; // use my I
-
-    // obtain IP address
+ 
+    // obtain IP address 
     if ((dummy = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
         perror("cannot get IP address");
         return 1;
     }
-
+ 
     if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
         perror("server: socket");
     }
@@ -105,14 +105,14 @@ int main(int argc, char *argv[]){
         if (nbits = recvfrom(sockfd, (char *)buffer, BUF_SIZE, 0, (struct sockaddr *)&client_sock, &clilen) == -1) {
 	    perror("failed to receive packet");
 	    exit(1);
-    	}
+    	} 
 	//create a new packet
 	struct packet * new_packet = formatString(buffer);
         printf("received packet #%d\n", new_packet->frag_no);
-	
+	 
 	//check to see if the packet number is matching the one that we are waiting for
 	if (new_packet->frag_no == curr_packet) { //if matched proccess the data
-	    //if it is the starting packet then open a new file
+	    //if it is the starting packet then open a new file 
 	    if (new_packet->frag_no == 1) {
         	fptr = fopen(new_packet->filename, "w");
 	    }
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]){
 	    }
 	    continue; //continue the loop with out incrementing the curr_packet number
 	}
-
+ 
 	curr_packet++;
     }
 
