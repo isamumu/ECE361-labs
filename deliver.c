@@ -163,7 +163,7 @@ int main(int argc, char **argv){
     }
     //free the char array for the packets 
     free_fragments(packets, numFrag);
-
+    printf("transmission done!\n");
 
     close(sockfd);
     return 0;
