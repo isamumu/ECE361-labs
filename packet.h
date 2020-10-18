@@ -157,7 +157,7 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 
 		// bc the array stores char pointers, we must allocate space for each packet string
 		printf("mallocing space from packNo %d\n", packNo + 1);
-		packets[packNo] = malloc(MAXBUFLEN * sizeof(char)); 
+		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
 		
 		printf("Converting packNo %d\n", packNo + 1);
 		// TODO: store the packet here
