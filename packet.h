@@ -66,10 +66,11 @@ char *formatPacket(struct packet * myPacket, int data_size) {
 	
 }
 
+
 struct packet *formatString(char * buf) {
 	struct packet *packet_rcv;
-	char * temp = strtok(buf, ":");
-	int strptr = strlen(temp);
+	char * temp = strtok(buf, ":"); //temp variable to store the sections of string
+	int strptr = strlen(temp); //ptr to the buf
 	packet_rcv->total_frag = atoi(temp);
 	
 	temp = strtok(buf + strptr, ":");
@@ -84,15 +85,14 @@ struct packet *formatString(char * buf) {
 	packet_rcv->filename = temp;
 	strptr += strlen(temp);
 
-	//temp = strtok(buf + strptr, ":");
-	packet_rcv->filedata = (char *)(buf + strptr);
+	memcpy(packet_rcv->filedata, &buf[strptr], packet_rcv->size);
 
 	return packet_rcv;
 			
 }
 
 
-struct packet* fragment_this(char* filename, int * fragNum){
+char** fragment_this(char* filename, int * fragNum){ //char *
 	
 	FILE *fp; // need a file pointer to open a file. 
 	fp = fopen(filename, "r");
@@ -139,7 +139,7 @@ struct packet* fragment_this(char* filename, int * fragNum){
 
 }
 
-void free_fragments(struct packet * packets, int numFrag) {
+void free_fragments(char** packets, int numFrag) {
 	for (int i = 0; i < numFrag; i++) {
 		free(packets[i]);
 	}
