@@ -108,7 +108,7 @@ struct packet *formatString(char * buf) {
 	return packet_rcv;
 			
 }
-*/
+
 
 
 char** fragment_this(char* filename, int * fragNum){ //char *
