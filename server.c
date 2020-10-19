@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
             //send ACK after data proccessed
             if (sendbits = sendto(sockfd, (const char *)ACK, strlen(ACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
                 perror("failed to send ACK");
-            exit(1);
+                exit(1);
             }
 
             //break the while loop when all packets are recieved
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]){
         else { //if not send NACK to the client
             if (sendbits = sendto(sockfd, (const char *)NACK, strlen(NACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
                 perror("failed to send NACK");
-            exit(1);
+                exit(1);
             }
             continue; //continue the loop with out incrementing the curr_packet number
         }
