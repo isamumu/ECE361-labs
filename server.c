@@ -130,7 +130,6 @@ int main(int argc, char *argv[]){
 
             //break the while loop when all packets are recieved
             if (new_packet->frag_no == new_packet->total_frag) {
-                perror("break: all packets received")
                 break;
             }	    
         }
