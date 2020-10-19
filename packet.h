@@ -1,5 +1,5 @@
 #define BYTE_LIMIT 1000
-#define BUF_SIZE 1024
+#define BUF_SIZE 1100
 #define MAXBUFLEN 4096
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +57,7 @@ char *formatPacket(struct packet*){
 }*/
 
 char *formatPacket(struct packet * myPacket, char *packetString) {
+	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%d:%s:", myPacket->total_frag, myPacket->frag_no, myPacket->size, myPacket->filename);
 	memcpy(packetString + strptr, myPacket->filedata, myPacket->size);
 	return packetString;
@@ -77,20 +78,22 @@ struct packet *formatString(char * buf) {
 	struct packet *packet_rcv = malloc(sizeof(struct packet));
 	char * myString[5];
 	int i = 0;
-	char * temp = strtok(buf, ":"); //temp variable to store the sections of string
+	//char * temp = strtok(buf, ":"); //temp variable to store the sections of string
 	//int strptr = strlen(temp); //ptr to the buf
 	//packet_rcv->total_frag = atoi(temp);
 	//printf("total_frag: %d\n", packet_rcv->total_frag);
-	while (temp != NULL) {
-		myString[i] = temp;
-		temp = strtok(NULL, ":");
-		i++;
-	}
+	myString[0] = strtok(buf, ":");
+	myString[1] = strtok(NULL, ":");
+	myString[2] = strtok(NULL, ":");
+	myString[3] = strtok(NULL, ":");
+	//myString[4] = strtok(NULL, ":");
 	packet_rcv->total_frag = atoi(myString[0]);
 	packet_rcv->frag_no = atoi(myString[1]);
         packet_rcv->size = atoi(myString[2]);
 	packet_rcv->filename = myString[3];
-	memcpy(packet_rcv->filedata, myString[4], packet_rcv->size);
+	//packet_rcv->filedata = myString[4];
+	int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + strlen(myString[3]) + 4;
+	memcpy(packet_rcv->filedata, buf + strptr, packet_rcv->size);
 	/*temp = strtok(buf + strptr, ":");
 	packet_rcv->frag_no = atoi(temp);
 	strptr += strlen(temp);
@@ -116,7 +119,7 @@ struct packet *formatString(char * buf) {
 char** fragment_this(char* filename, int * fragNum){ //char *
 	
 	FILE *fp; // need a file pointer to open a file. 
-	fp = fopen(filename, "rb");
+	//fp = fopen(filename, "rb");
 	//fp = fopen(filename, "r");
 	// see if we require fragmenting
 	//int numFrags;
@@ -130,20 +133,18 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 	// A: because, each pointer to a packet is technically a pointer to a char pointer
 	// remember: in C, a string is basically a char pointer to the first character
 	fp = fopen(filename, "rb"); 
-
 	for(int packNo = 0; packNo < numFrags; packNo++){ // run at least once
 		printf("Creating packNo %d\n", packNo + 1);
 		struct packet paketto;	
 		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
 		printf("i'm here\n");
-		
-		// FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
 		paketto.total_frag = numFrags;
 		paketto.frag_no = packNo + 1;
 		paketto.filename = filename;
 		fread(paketto.filedata, sizeof(char), BYTE_LIMIT, fp);
+		//fp += BYTE_LIMIT * sizeof(char);
 		
 		if((packNo+1) != numFrags){
 			paketto.size = BYTE_LIMIT;
@@ -166,6 +167,7 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 		//packets[packNo] = formatPacket(&paketto);	
 
 	}
+	fclose(fp);
 
 	return packets;
 

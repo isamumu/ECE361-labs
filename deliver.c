@@ -135,25 +135,25 @@ int main(int argc, char **argv){
     //step 4. implement stop-and-wait i.e. don't proceed to until an ACK
 
     //numFrag stores the total number of fragmentation
-    int numFrag;
-    int sendbits;
+    int numFrag;  
+    int sendbits;  
     char **packets = fragment_this(file, &numFrag); //get the fragmented packets in string
-    memset(buf, 0, sizeof(char) * MAXBUFLEN);
-
+    memset(buf, 0, sizeof(char) * MAXBUFLEN); 
+ 
     //send each packet until none is left
     for (int packNo = 0; packNo < numFrag; packNo++) {
         printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
         if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
             printf("failed to send packet #%d\n", packNo + 1); 
-            exit(1);
-        }  
+            exit(1); 
+        }    
    	
 	printf("Sent packet %d (total: %d)\n", packNo + 1, numFrag);
 	memset(buf, 0, sizeof(char) * MAXBUFLEN);
 	if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen) == -1) {
 	    printf("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
 	    exit(1);
-	}
+	} 
 	
 	if (strcmp(buf, ACK) == 0) {
 	    printf("packet #%d recieved\n", packNo + 1);
