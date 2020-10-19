@@ -129,14 +129,15 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 	// Q: why is it a char pointer?
 	// A: because, each pointer to a packet is technically a pointer to a char pointer
 	// remember: in C, a string is basically a char pointer to the first character
-
+	FILE* fp = fopen(filename, "rb"); 
+	
 	for(int packNo = 0; packNo < numFrags; packNo++){ // run at least once
 		printf("Creating packNo %d\n", packNo + 1);
 		struct packet paketto;	
 		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
 		printf("i'm here\n");
-		FILE* fp = fopen(filename, "rb"); 
+		
 		// FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
 		paketto.total_frag = numFrags;
