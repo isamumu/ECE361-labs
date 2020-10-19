@@ -88,7 +88,7 @@ struct packet *formatString(char * buf) {
 	}
 	packet_rcv->total_frag = atoi(myString[0]);
 	packet_rcv->frag_no = atoi(myString[1]);
-        packet_rcv->size = atoi(myString[2]);
+    packet_rcv->size = atoi(myString[2]);
 	packet_rcv->filename = myString[3];
 	memcpy(packet_rcv->filedata, myString[4], packet_rcv->size);
 	/*temp = strtok(buf + strptr, ":");
