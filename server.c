@@ -9,8 +9,7 @@
 #include <netdb.h>
 #include <time.h>
 #include "packet.h"
-
-#define BUF_SIZE 1024
+ 
 #define ACK "ACK"
 #define NACK "NACK"
 
@@ -35,9 +34,9 @@ int main(int argc, char *argv[]){
     int dummy; 
     socklen_t clilen, addr_size;
     
-    char * port = argv[1]; // get the port
+    char * port = argv[1]; // get the port 
     char* yes = "yes";
-    char* no = "no"; 
+    char* no = "no";  
      
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -105,7 +104,7 @@ int main(int argc, char *argv[]){
         if (nbits = recvfrom(sockfd, (char *)buffer, BUF_SIZE, 0, (struct sockaddr *)&client_sock, &clilen) == -1) {
 	    perror("failed to receive packet");
 	    exit(1);
-    	} 
+    	}
         //create a new packet
         struct packet * new_packet = formatString(buffer);
         printf("received packet #%d\n", new_packet->frag_no);
@@ -114,23 +113,23 @@ int main(int argc, char *argv[]){
         if (new_packet->frag_no == curr_packet) { //if matched proccess the data
             //if it is the starting packet then open a new file 
             if (new_packet->frag_no == 1) {
-                fptr = fopen(new_packet->filename, "w");
-            }
-            //write to the file
+                fptr = fopen(new_packet->filename, "w"); 
+            } 
+            //write to the file 
                 if (writeCheck = fwrite(new_packet->filedata, sizeof(char), new_packet->size, fptr) != new_packet->size) {
                 perror("error occur when writing");
                 exit(1);
-            }
+            } 
             
             //send ACK after data proccessed
             if (sendbits = sendto(sockfd, (const char *)ACK, strlen(ACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
                 perror("failed to send ACK");
-            exit(1);
+            	exit(1);
             }
 
             //break the while loop when all packets are recieved
             if (new_packet->frag_no == new_packet->total_frag) {
-                perror("break: all packets received")
+                printf("break: all packets received\n");
                 break;
             }	    
         }
@@ -139,7 +138,7 @@ int main(int argc, char *argv[]){
                 perror("failed to send NACK");
             exit(1);
             }
-            continue; //continue the loop with out incrementing the curr_packet number
+            continue; //continue the loop with out incrementing the curr_packet number 
         }
     
         curr_packet++;
