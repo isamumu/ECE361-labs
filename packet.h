@@ -139,8 +139,6 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
 		printf("i'm here\n");
-		//FILE* fp = fopen(filename, "rb"); 
-		// FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
 		paketto.total_frag = numFrags;
 		paketto.frag_no = packNo + 1;
