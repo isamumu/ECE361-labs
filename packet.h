@@ -130,7 +130,7 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 	// A: because, each pointer to a packet is technically a pointer to a char pointer
 	// remember: in C, a string is basically a char pointer to the first character
 	FILE* fp = fopen(filename, "rb"); 
-	
+
 	for(int packNo = 0; packNo < numFrags; packNo++){ // run at least once
 		printf("Creating packNo %d\n", packNo + 1);
 		struct packet paketto;	
@@ -158,7 +158,7 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 
 		// bc the array stores char pointers, we must allocate space for each packet string
 		printf("mallocing space from packNo %d\n", packNo + 1);
-		packets[packNo] = malloc(BYTE_LIMIT * sizeof(char)); 
+		packets[packNo] = malloc(BUF_SIZE * sizeof(char)); 
 		
 		printf("Converting packNo %d\n", packNo + 1);
 		// TODO: store the packet here
