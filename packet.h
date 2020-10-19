@@ -1,5 +1,6 @@
 #define BYTE_LIMIT 1000
 #define BUF_SIZE 1024
+#define MAXBUFLEN 4096
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// The total_frag field indicates the total number of fragments of the file.   ///
@@ -28,8 +29,9 @@ struct packet {
 
 int getBytes(char* filename){
 	// opening the file in read mode 
-    FILE* fp = fopen(filename, "r"); 
-  
+    //FILE* fp = fopen(filename, "r"); 
+  	FILE* fp = fopen(filename, "rb");
+
     if (fp == NULL) { 
         printf("File Not Found!\n"); 
         return -1; 
@@ -110,11 +112,12 @@ struct packet *formatString(char * buf) {
 }
 
 
+
 char** fragment_this(char* filename, int * fragNum){ //char *
 	
 	FILE *fp; // need a file pointer to open a file. 
-	fp = fopen(filename, "r");
-
+	fp = fopen(filename, "rb");
+	//fp = fopen(filename, "r");
 	// see if we require fragmenting
 	//int numFrags;
 	int fileSize = getBytes(filename);
@@ -133,7 +136,8 @@ char** fragment_this(char* filename, int * fragNum){ //char *
 		memset(paketto.filedata, 0, sizeof(char) * (BYTE_LIMIT));
 
 		printf("i'm here\n");
-		FILE* fp = fopen(filename, "r"); 
+		FILE* fp = fopen(filename, "rb"); 
+		// FILE* fp = fopen(filename, "r"); 
 		// order: total_frag, frag_no, size, filename, filedata
 		paketto.total_frag = numFrags;
 		paketto.frag_no = packNo + 1;
@@ -173,28 +177,3 @@ void free_fragments(char** packets, int numFrag) {
 	free(packets);
 	packets = NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

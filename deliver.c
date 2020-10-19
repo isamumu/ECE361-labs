@@ -12,9 +12,11 @@
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
-#define BITE_LIMIT 1000
+#define BYTE_LIMIT 1000
 #define ACK "ACK"
 #define NACK "NACK"
+
+// IP Address: 128.100.13.170 or .180
 
 // the execution command should have the following structure: deliver <server address> <server port number>
 ////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +113,6 @@ int main(int argc, char **argv){
         end = clock();
     } else {
         printf("file transfer may not proceed\n");
-        exit(1);
     }
  
     //===================Section 2&3=====================================================
@@ -138,6 +139,7 @@ int main(int argc, char **argv){
     int sendbits;
     char **packets = fragment_this(file, &numFrag); //get the fragmented packets in string
     memset(buf, 0, sizeof(char) * MAXBUFLEN);
+
     //send each packet until none is left
     for (int packNo = 0; packNo < numFrag; packNo++) {
         printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
