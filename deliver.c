@@ -15,6 +15,7 @@
 #define BYTE_LIMIT 1000
 #define ACK "ACK"
 #define NACK "NACK"
+#define ATTEMPT_LIMIT 50 //the round trip we have is about 70 usec, want the server to wait for about 3 msec to close, therefore chose 40 resend attempts
 
 // IP Address: 128.100.13.170 or .180
 
@@ -139,10 +140,26 @@ int main(int argc, char **argv){
     int sendbits;  
     char **packets = fragment_this(file, &numFrag); //get the fragmented packets in string
     memset(buf, 0, sizeof(char) * MAXBUFLEN); 
- 
+    int istimeout = 0;
+    clock_t estimatedRTT = 2 * (end - start);
+    clock_t sampleRTT;
+    clock_t devRTT = (end - start);
+    int send_count = 0;
+    //configure the socket so that it can detect timeout
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 999999;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
+        printf("failed to configure socket\n");
+	exit(1);
+    }
+    
     //send each packet until none is left
     for (int packNo = 0; packNo < numFrag; packNo++) {
-        printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
+	//send_count = 0;
+        istimeout = 0;
+	start = clock();        
+	printf("Sending packet %d (total: %d)\n", packNo + 1, numFrag);
         if (sendbits = sendto(sockfd, packets[packNo], MAXBUFLEN, 0, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
             printf("failed to send packet #%d\n", packNo + 1); 
             exit(1); 
@@ -150,18 +167,60 @@ int main(int argc, char **argv){
    	
 	printf("Sent packet %d (total: %d)\n", packNo + 1, numFrag);
 	memset(buf, 0, sizeof(char) * MAXBUFLEN);
-	if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen) == -1) {
-	    printf("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
+	//start = clock();
+	while (1) {
+	    //send_count = 0;
+	    if (nbits = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&server_sock, &addrlen) == -1) {
+		printf("failed to recieve ackownledgement for packet #%d\n", packNo + 1);
+		printf("Checking for resend ability...\n");
+		send_count++;
+		if (send_count > ATTEMPT_LIMIT) {
+		    printf("Failed to transfer the file! Exceeds resend imitation\n");
+		    exit(1);
+		}
+		else {
+		    printf("Timeout...resending packet #%d; resend count: %d\n", packNo + 1, send_count);
+		    istimeout = 1;
+		    packNo--;
+		    break;
+		}
+	    }
+		
+	    if (strcmp(buf, ACK) == 0) {
+		printf("packet #%d recieved\n", packNo + 1);
+		break;
+	    }
+	    /*else { //if NACK is recieved keep the packNo unchanged keep sending the same packet
+		printf("packet #%d not recieved\n", packNo + 1);
+		if (send_count > ATTEMPT_LIMIT) {
+		    printf("Failed to transfer the file! Exceeds resend imitation\n");
+		    exit(1);
+		}
+		else {
+		    printf("Timeout...resending packet #%d\n", packNo + 1);
+		    istimeout = 1;
+		    packNo--;
+		    break;
+		}
+	    }*/
+	}
+    	end = clock();
+	sampleRTT = end - start;
+	estimatedRTT = 0.875 * estimatedRTT + 0.125 * sampleRTT;
+	devRTT = 0.75 * devRTT + 0.25 * abs(sampleRTT - estimatedRTT);
+	timeout.tv_usec = (estimatedRTT + 4 * devRTT);
+	//reset the socket config
+	if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
+            printf("failed to configure socket\n");
 	    exit(1);
-	} 
-	
-	if (strcmp(buf, ACK) == 0) {
-	    printf("packet #%d recieved\n", packNo + 1);
+    	}
+	if (istimeout == 0) {
+	    send_count = 0;
 	}
-	else { //if NACK is recieved keep the packNo unchanged keep sending the same packet
-	    printf("packet #%d not recieved\n", packNo + 1);
-	    packNo--;  
-	}
+	printf("sampleRTT: %d\n", sampleRTT);
+	printf("estimatedRTT: %d\n", estimatedRTT);
+	printf("devRTT: %d\n", devRTT);
+	printf("new timeout set to %d millisecond\n", timeout.tv_usec);
     }
     //free the char array for the packets 
     free_fragments(packets, numFrag);
