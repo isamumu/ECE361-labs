@@ -41,10 +41,89 @@ void chat(int sockfd)
     } 
 } 
 
+void login(char *cmd, int *sockfd){
+    char *id, *password, *ip, *port;
+    struct addrinfo hints, *servinfo, *p;
+    char s[INET6_ADDRSTRLEN];
+    int numbytes;
+    // extraect the above components from cmd
+
+    cmd = strtok(NULL, " ");
+	id = cmd;
+
+	cmd = strtok(NULL, " ");
+	password = cmd;
+
+	cmd = strtok(NULL, " ");
+	ip = cmd;
+
+	cmd = strtok(NULL, " \n");
+	port = cmd;
+
+    if (id == NULL || password == NULL || ip == NULL || port == NULL) {
+		fprintf(stdout, "login format: /login <client_id> <password> <server_ip> <server_port>\n");
+		return 1;
+
+	}  else if(*socket != INVALID){
+        fprintf("ERROR: attempted multiple logins")
+        return 1;
+
+    } else {
+        //instantiate TCP protocol
+        int dummy;
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM; // TCP socket type
+
+        // find the IP at the specified port (FIND THE SERVER)
+        if ((dummy = getaddrinfo(argv[1], port, &hints, &servinfo)) != 0) {
+            perror("bad retrieval");
+            return 1;
+        }
+        
+        // referenced from Beej's code pg.35
+        // get socket from server port
+        for(char *p = servinfo; p != NULL; p = p->ai_next) {
+            if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                p->ai_protocol)) == -1) {
+                perror("client: socket\n");
+                continue;
+            }
+
+            if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                close(sockfd);
+                perror("client: connect\n");
+                continue;
+            }
+            
+            break;
+        }
+
+        if (p == NULL) {
+            fprintf(stderr, "client: failed to connect\n");
+            close(sockfd);
+            *sockfd = INVALID_SOCKET; // make the socket variable reusable for next connection 
+            return 1;
+        }
+
+        // at this point we have the socket, so let's connect!
+        inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
+        printf("client: connecting to %s\n", s);
+        freeaddrinfo(servinfo); // all done with this structure
+
+        // TODO: implement login information processing
+
+    }
+
+
+}
+
+
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces
     char *buff[MAXBUFLEN]; 
+    int socketfd = INVALID_SOCKET; // init socket value
+    pthread_t received_msg;
     
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
