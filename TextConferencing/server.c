@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
+#include <message.h>
 #include "packet.h"
  
 #define ACK "ACK"
