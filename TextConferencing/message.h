@@ -1,5 +1,6 @@
 #define MAX_NAME 1100
 #define MAX_DATA 4096
+#define BUF_SIZE 1100
 
 enum messageType {
 	LOGIN,
@@ -56,3 +57,4 @@ struct message *formatString(char * buf) {
 	print_packet(packet_rcv);
 	return packet_rcv;
 }
+ 
