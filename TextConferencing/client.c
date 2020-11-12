@@ -9,7 +9,6 @@
 #include <netdb.h>
 #include <message.h>
 #include <time.h>
-#include "packet.h"
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
@@ -111,6 +110,12 @@ void login(char *cmd, int *sockfd){
         freeaddrinfo(servinfo); // all done with this structure
 
         // TODO: implement login information processing
+        // TODO: modify packet.h to support different functions
+        int numbytes;
+        struct packet packetto;
+        packetto.type = LOGIN;
+
+        
 
     }
 
