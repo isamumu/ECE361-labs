@@ -15,37 +15,16 @@
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
 #define BYTE_LIMIT 1000
-#define ATTEMPT_LIMIT 50 //the round trip we have is about 70 usec, want the server to wait for about 3 msec to close, therefore chose 40 resend attempts
 
 bool joined = false;
 char buff[MAXBUFLEN];
 
-void chat(int sockfd) 
-{ 
-    int n; 
-    for (;;) { 
-        bzero(buff, sizeof(buff)); 
-        printf("Enter the string : "); 
-        n = 0; 
-        while ((buff[n++] = getchar()) != '\n') 
-            ; 
-        write(sockfd, buff, sizeof(buff)); 
-        bzero(buff, sizeof(buff)); 
-        read(sockfd, buff, sizeof(buff)); 
-        printf("From Server : %s", buff); 
-        if ((strncmp(buff, "exit", 4)) == 0) { 
-            printf("Client Exit...\n"); 
-            break; 
-        } 
-    } 
-} 
 
 void login(char *cmd, int *sockfd){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
     int numbytes;
-    char *msgString;;
     // extraect the above components from cmd
 
     cmd = strtok(NULL, " ");
@@ -118,7 +97,8 @@ void login(char *cmd, int *sockfd){
         strncpy(msg.source, id, MAX_NAME);
         strncpy(msg.data, password, MAX_DATA);
         msg.size = strlen(msg.data);
-        msgString = formatMessage(msg, buff);
+        
+        formatMessage(msg, buff);
 
         if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
@@ -155,13 +135,12 @@ void logout(int *sockfd, pthread_t *rcv_thread){
         return;
     }
 
-    char* logmsg;
     int numbytes;
     struct message msg;
     msg.type = EXIT;
     msg.size = 0;
 
-    logmsg = formatMessage(msg, buff);
+    formatMessage(msg, buff);
 
     if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "logout error\n");
@@ -204,6 +183,22 @@ void joinsession(char *session, int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
+
+        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+			fprintf(stderr, "ERROR: nothing received\n");
+			return;
+		}
+
+        buff[bytes] = 0; // mark end of the string
+        newMessage = formatString(buff);
+
+        if (newMessage.type == JN_ACK) {
+            fprintf(stdout, "Join Success... session ID: %s.\n", newMessage.data);
+            joined = true;
+        } else if (packet.type == JN_NAK) {
+            fprintf(stdout, "Join Failed... Data: %s\n", newMessage.data);
+            joined = false;
+
         return;
     }
 }
@@ -248,6 +243,20 @@ void createsession(char *session, int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
+
+        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+			fprintf(stderr, "ERROR: nothing received\n");
+			return;
+		}
+
+        buff[bytes] = 0; // mark end of the string
+        newMessage = formatString(buff);
+
+        if (newMessage.type == NS_ACK) {
+            fprintf(stdout, "Successfully created and joined session %s.\n", newMessage.data);
+            joined = true;
+        }
+
         return;
     }
 }
@@ -268,6 +277,18 @@ void list(int sockfd) {
             return;
         }
 
+        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+			fprintf(stderr, "ERROR: nothing received\n");
+			return;
+		}
+
+        buff[bytes] = 0; // mark end of the string
+        newMessage = formatString(buff);
+
+        if (newMessage.type == QU_ACK) {
+            fprintf(stdout, "User id\t\tSession ids\n%s", newMessage.data);
+        }
+
         return;
     }
 }
@@ -284,16 +305,17 @@ void send(int sockfd){
     int numbytes;
     struct message msg;
     msg.type = MESSAGE;
-    char* msgString;
 
     strncpy(msg.data, buff, MAX_DATA);
     msg.size = strlen(msg.data);
-    msgString = formatMessage(msg, buff);
+    formatMessage(msg, buff);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return
     }
+
+    
 }
 
 
@@ -307,8 +329,9 @@ int main(int argc, char **argv){
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
         fgets(buff, MAXBUFLEN - 1, stdin); 
+        // TODO: CHECK buff reset
         buff[strcspn(buf, "\n")] = 0; // assign the value of the new line to 0
-        cmd = buf; 
+        cmd = buff; 
         
         while(*cmd == ' '){
             cmd++; // if the current input is a space chech the next position
@@ -332,7 +355,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
-            //cmd = strtok(NULL, " "); //cmd should contain the session id
+            cmd = strtok(NULL, " "); //cmd should contain the session id
 			joinsession(cmd, &sockfd);
 
 		} else if (strcmp(cmd, "/leavesession") == 0) {
@@ -341,7 +364,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
-			//cmd = strtok(NULL, " "); //cmd should contain the session id
+			cmd = strtok(NULL, " "); //cmd should contain the session id
             createsession(sockfd);
 
 		} else if (strcmp(cmd, "/list") == 0) {
