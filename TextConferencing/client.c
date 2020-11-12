@@ -143,7 +143,7 @@ void joinsession(char *session, int sockfd) {
     }
 }
 
-void leavesession(char *session, int sockfd) {
+void leavesession(int sockfd) {
     if (session == NULL) {
         fprintf(stdout, "invalid session id, input format: /joinsession <session ID>\n");
         return;
@@ -231,7 +231,6 @@ int main(int argc, char **argv){
 			joinsession();
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
-			cmd = strtok(NULL, " "); //cmd should contain the session id
             joinsession();
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
