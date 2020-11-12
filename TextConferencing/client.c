@@ -144,11 +144,7 @@ void joinsession(char *session, int sockfd) {
 }
 
 void leavesession(int sockfd) {
-    if (session == NULL) {
-        fprintf(stdout, "invalid session id, input format: /joinsession <session ID>\n");
-        return;
-    }
-    else if (sockfd == -1) {
+    if (sockfd == -1) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     }
@@ -170,7 +166,7 @@ void leavesession(int sockfd) {
 
 void createsession(char *session, int sockfd) {
     if (session == NULL) {
-        fprintf(stdout, "invalid session id, input format: /joinsession <session ID>\n");
+        fprintf(stdout, "invalid session id, input format: /createsession <session ID>\n");
         return;
     }
     else if (sockfd == -1) {
@@ -182,6 +178,26 @@ void createsession(char *session, int sockfd) {
         newMessage.type = NEW_SESS;
         newMessage.size = 0;
         //strcpy(newMessage.data, session, MAX_DATA);
+        int bytes;
+        char *buf;
+        formatMessage(newMessage, buf);
+        if ((bytes = send(sockfd, buf, MAXBUFLEN, 0)) == -1) {
+            fprintf(stdout, "ERROR: send() failed\n");
+            return;
+        }
+        return;
+    }
+}
+
+void list(int sockfd) {
+    if (sockfd == -1) {
+        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        return;
+    }
+    else {
+        struct message newMessage;
+        newMessage.type = QUERY;
+        newMessage.size = 0;
         int bytes;
         char *buf;
         formatMessage(newMessage, buf);
