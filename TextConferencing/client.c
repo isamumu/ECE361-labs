@@ -10,6 +10,8 @@
 #include <message.h>
 #include <time.h>
 
+#include "message.h"
+
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
 #define MAXBUFLEN 4096
 #define BYTE_LIMIT 1000
@@ -122,6 +124,97 @@ void login(char *cmd, int *sockfd){
 
 }
 
+void joinsession(char *session, int sockfd) {
+    if (session == NULL) {
+        fprintf(stdout, "invalid session id, input format: /joinsession <session ID>\n");
+        return;
+    }
+    else if (sockfd == -1){
+        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        return;
+    }
+    else {
+        struct message newMessage;
+        newMessage.type = JOIN;
+        newMessage.size = strlen(session);
+        strcpy(newMessage.data, session, MAX_DATA);
+        int bytes;
+        char *buf;
+        formatMessage(newMessage, buf);
+        if ((bytes = send(sockfd, buf, MAXBUFLEN, 0)) == -1) {
+            fprintf(stdout, "ERROR: send() failed\n");
+            return;
+        }
+        return;
+    }
+}
+
+void leavesession(int sockfd) {
+    if (sockfd == -1) {
+        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        return;
+    }
+    else {
+        struct message newMessage;
+        newMessage.type = LEAVE_SESS;
+        newMessage.size = 0;
+        //strcpy(newMessage.data, session, MAX_DATA);
+        int bytes;
+        char *buf;
+        formatMessage(newMessage, buf);
+        if ((bytes = send(sockfd, buf, MAXBUFLEN, 0)) == -1) {
+            fprintf(stdout, "ERROR: send() failed\n");
+            return;
+        }
+        return;
+    }
+}
+
+void createsession(char *session, int sockfd) {
+    if (session == NULL) {
+        fprintf(stdout, "invalid session id, input format: /createsession <session ID>\n");
+        return;
+    }
+    else if (sockfd == -1) {
+        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        return;
+    }
+    else {
+        struct message newMessage;
+        newMessage.type = NEW_SESS;
+        newMessage.size = 0;
+        //strcpy(newMessage.data, session, MAX_DATA);
+        int bytes;
+        char *buf;
+        formatMessage(newMessage, buf);
+        if ((bytes = send(sockfd, buf, MAXBUFLEN, 0)) == -1) {
+            fprintf(stdout, "ERROR: send() failed\n");
+            return;
+        }
+        return;
+    }
+}
+
+void list(int sockfd) {
+    if (sockfd == -1) {
+        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        return;
+    }
+    else {
+        struct message newMessage;
+        newMessage.type = QUERY;
+        newMessage.size = 0;
+        int bytes;
+        char *buf;
+        formatMessage(newMessage, buf);
+        if ((bytes = send(sockfd, buf, MAXBUFLEN, 0)) == -1) {
+            fprintf(stdout, "ERROR: send() failed\n");
+            return;
+        }
+        return;
+    }
+}
+
 
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
@@ -156,13 +249,15 @@ int main(int argc, char **argv){
 			// logoutServer();
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
-			// joinsession();
+            cmd = strtok(NULL, " "); //cmd should contain the session id
+			joinsession();
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
-			// leavesession();
+            joinsession();
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
-			// createsession();
+			cmd = strtok(NULL, " "); //cmd should contain the session id
+            joinsession();
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
 			// list();
