@@ -25,11 +25,13 @@ struct message {
     unsigned char data[MAX_DATA];
 };
 
-char *formatMessage(struct message * myPacket, char *packetString) {
+//note to self: function changes the content the pointer is pointing to
+// packet to string
+void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
 	memcpy(packetString + strptr, myPacket->data, myPacket->size);
-	return packetString;
+	
 	
 }
 
@@ -40,7 +42,7 @@ void print_message(struct message * myPacket) {
 	printf("filename: %s\n", myPacket->data);
 }
 
-
+// string to packet
 struct message *formatString(char * buf) {
 	struct message *packet_rcv = malloc(sizeof(struct message));
 	char * myString[5];
