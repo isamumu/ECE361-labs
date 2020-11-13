@@ -1,55 +1,74 @@
-#include <stdio.h>  
-#include <string.h>   //strlen  
-#include <stdlib.h>  
-#include <errno.h>  
-#include <unistd.h>   //close  
-#include <arpa/inet.h>    //close  
-#include <sys/types.h>  
-#include <sys/socket.h>  
-#include <netinet/in.h>  
-#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
-
-#define TRUE   1  
-#define FALSE  0  
-#define PORT 8888 
-
-int main(int argc, char **argv) {
-    //Example code: A simple server side code, which echos back the received message. 
+//Example code: A simple server side code, which echos back the received message. 
 //Handle multiple socket connections with select and fd_set on Linux 
 #include <stdio.h> 
 #include <string.h> //strlen 
 #include <stdlib.h> 
 #include <errno.h> 
 #include <unistd.h> //close 
-#include <arpa/inet.h> //close 
 #include <sys/types.h> 
 #include <sys/socket.h> 
-
 #include <arpa/inet.h> 
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
 #include <message.h>
-#include "packet.h"
-#include "message.h"
 
 #define BACKLOG 10
 #define SESSION_SIZE 10
 #define USER_SIZE 10
 
-char *sessionList[10]; //subject to change into a linkedlist
+// 1. create linked list of dummy users (5 sessions, 5 users per session)
+// 2. implement functions to add and remove users from the linked list
+// 3. implement function to scan through the entire list
+// 4. create dictionary to store predefined users and password pairs
+
+//TODO: create 5 dummy session linked list (with only head) with NULL sessionID
+//      create 5 dummy user linked list (with only head) with NULL sessionID
+// Isamu
+
+//TODO: create dictionary of user and password
+// Isamu
+
+char *sessionList[SESSION_SIZE]; //subject to change into a linkedlist
 struct user userlist[10];
 int userCount = 0;
 
 void message_handler(int sockfd, char *msgRecv) {
-    struct message *newMsg;
+    struct message *newMsg, *respMsg;
     newMsg = formatString(msgRecv);
+    char *buff[BUF_SIZE];
+    int numbytes;
+
+
+    // TODO after creating linked list functions, implement 
+    // Hannah: session functions (create join and leave)
+    // Isamu: rest
     if (newMsg.type == LOGIN) {
+        char *password = newMsg->data;
+        char *id = newMsg->source;
+        bool match = false;
+        
+        //TODO: match and find user and password from list
+
         //check for user name and password
         //send back ACK and NACK accordingly
+        if(match){
+            respMsg.type = LO_ACK;
+        } else{
+            respMsg.type = LO_NACK;
+        }
+
+        formatMessage(respMsg, buff);
+
+        if((numbytes = send(*sockfd, buff, BUF_SIZE - 1, 0)) == -1){
+            fprintf(stderr, "ACK error\n");
+            close(sockfd);
+            return;
+        }
     }
     else if (newMsg.type == EXIT) {
         //exit the server
+        //get rid of sockfd
     }
     else if (newMsg.type == JOIN) {
         //find the session in the session list
@@ -60,7 +79,8 @@ void message_handler(int sockfd, char *msgRecv) {
     else if (newMsg.type == LEAVE_SESS) {
         //delete the session from the session list
         //send back ACK and NACK
-    }
+        //if every user leaves the linked list, then we change the name of session back to NULL
+    } 
     else if (newMsg.type == NEW_SESS) {
         //check if max seesion number has reached
         //create a new session and put the sockfd into the sockfd list
@@ -76,6 +96,14 @@ void message_handler(int sockfd, char *msgRecv) {
     else { // newMsg.type == QUERY
         //print out the list of user and avaliable sessions
         //send back ACK
+        respMsg.type = QU_ACK;
+        formatMessage(respMsg, buff);
+
+        if((numbytes = send(*sockfd, buff, BUF_SIZE - 1, 0)) == -1){
+            fprintf(stderr, "ACK error\n");
+            close(sockfd);
+            return;
+        }
     }
     return;
 }
@@ -160,7 +188,7 @@ int main(int argc, char *argv[]){
                         if (userfd > fdmax) {
                             fdmax = userfd;
                         }
-                        printf("new connection made on aocket %d\n", userfd);
+                        printf("new connection made on socket %d\n", userfd);
                     }
 
                 }
