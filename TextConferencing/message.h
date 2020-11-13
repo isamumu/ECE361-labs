@@ -25,6 +25,12 @@ struct message {
     unsigned char data[MAX_DATA];
 };
 
+struct session {
+	char *sesionName;
+	int session_number;
+	int socketfds[10];
+	int fd_count = 0;
+}
 //note to self: function changes the content the pointer is pointing to
 // packet to string
 void formatMessage(struct message * myPacket, char *packetString) {
