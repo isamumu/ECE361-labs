@@ -27,6 +27,7 @@ struct message {
 
 struct session {
 	char *sesionName;
+	int session_number;
 	int socketfds[10];
 	int fd_count = 0;
 }
