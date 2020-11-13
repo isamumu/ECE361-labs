@@ -10,18 +10,37 @@
 #include <time.h>
 #include <message.h>
 #include "packet.h"
- 
-#define ACK "ACK"
-#define NACK "NACK"
+#include "message.h"
 
-// the execution command should have the following structure: server <UDP listen port>
-////////////////////////////////////////////////////////////////////////////////////
-//// upon execution the server should:                                          ////
-////  1. Open a UDP socket and listen at the specified port number              ////
-////  2. Receive a message from the client                                      ////
-////      a. if the message is "ftp", reply with a message "yes" to the client. ////
-////      b. else, reply with a message "no" to the client                      ////
-////////////////////////////////////////////////////////////////////////////////////
+#define BACKLOG 10
+#define SESSION_SIZE 10
+#define USER_SIZE 10
+
+char *sessionList[10];
+struct user userlist[10];
+int userCount = 0;
+
+void message_handler(int sockfd, char *msgRecv) {
+    struct message *newMsg;
+    newMsg = formatString(msgRecv);
+    if (newMsg.type == LOGIN) {
+        //check for user name and password
+        //send back ACK and NACK accordingly
+    }
+    else if (newMsg.type == EXIT) {
+        //exit the server
+    }
+    else if (newMsg.type == JOIN) {
+        //check if max seesion number has reached
+        //create a new session and put the sockfd into the sockfd list
+        //increment the fd count
+        //add the new session to the session list
+        //send back ACK and NACK accordingly
+    }
+    else if (newMsg.type == LEAVE_SESS) {
+        //
+    }
+}
 
 int main(int argc, char *argv[]){
     
@@ -31,13 +50,21 @@ int main(int argc, char *argv[]){
     struct sockaddr_storage client_sock; //client connection
     struct addrinfo *servinfo, hints; 
     char buffer[BUF_SIZE];
-    int sockfd;
-    int dummy; 
+    int sockfd, userfd;
+    int numbytes; 
     socklen_t clilen, addr_size;
+    fd_set master;
+    fd_set read_fds;
+    int fdmax;
+
+    int connection, other_connection;
+
+    int yes = 1;
+
+    FD_ZERO(&master);
+    FD_ZERO(&read_fds);
     
     char * port = argv[1]; // get the port 
-    char* yes = "yes";
-    char* no = "no";  
      
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -46,7 +73,7 @@ int main(int argc, char *argv[]){
     hints.ai_flags = AI_PASSIVE; // use my I
  
     // obtain IP address 
-    if ((dummy = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
+    if ((numbytes = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
         perror("cannot get IP address");
         return 1;
     }
@@ -54,6 +81,7 @@ int main(int argc, char *argv[]){
     if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
         perror("server: socket");
     }
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
     if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
         close(sockfd);
@@ -62,92 +90,84 @@ int main(int argc, char *argv[]){
     
     //finished with finding the IP address
     freeaddrinfo(servinfo);
+
+    if ((numbytes = listen(sockfd, BACKLOG)) == -1) {
+        perror("server: listen");
+        exit(1);
+    }
+
+    FD_SET(sockfd, &master);
+
+    fdmax = sockfd;
     
     printf("one moment please.....\n");
-    clilen = sizeof(struct sockaddr_storage);
 
-    int nbits = recvfrom(sockfd, (char*)buffer, BUF_SIZE, 0, (struct sockaddr *) &client_sock, &clilen); 
-
-    if(nbits == -1){
-        perror("failed to receive from client");
-        exit(1);
-    } else{
-        printf("received: #%d\n", nbits);
-    }
-    
-    buffer[nbits] = '\0'; // end indicator
-    //printf("valud of buffer: %s\n", buffer);
-
-    if(strcmp(buffer, "ftp") == 0){
-        int sentYes = sendto(sockfd, (const char *)yes, strlen(yes), 0, (struct sockaddr *) &client_sock, sizeof(cliaddr));
-        if(sentYes == -1){
-            perror("failed to send yes");
-            exit(1);
-        } else{
-            printf("sent to client!\n");
-        }
-            
-    } else{
-        int sentNo = sendto(sockfd, (const char *)no, strlen(no), 0, (struct sockaddr *) &client_sock, sizeof(cliaddr));
-        if(sentNo == -1){
-            perror("failed to send no");
+    while(1) {
+        read_fds = master;
+        if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1 ) {
+            perror("select");
             exit(1);
         }
-    }
 
-    FILE *fptr;
-    int sendbits;
-    int writeCheck;
-    int curr_packet = 1; //keep track of the current frag_no 
-    
-    while (1) {
-	//recieve packet from client
-        if (nbits = recvfrom(sockfd, (char *)buffer, BUF_SIZE, 0, (struct sockaddr *)&client_sock, &clilen) == -1) {
-	    perror("failed to receive packet");
-	    exit(1);
-    	}
-        //create a new packet
-        struct packet * new_packet = formatString(buffer);
-        printf("received packet #%d\n", new_packet->frag_no);
-        
-        //check to see if the packet number is matching the one that we are waiting for
-        if (new_packet->frag_no == curr_packet) { //if matched proccess the data
-            //if it is the starting packet then open a new file 
-            if (new_packet->frag_no == 1) {
-                fptr = fopen(new_packet->filename, "w"); 
-            } 
-            //write to the file 
-                if (writeCheck = fwrite(new_packet->filedata, sizeof(char), new_packet->size, fptr) != new_packet->size) {
-                perror("error occur when writing");
-                exit(1);
-            } 
-            
-            //send ACK after data proccessed
-            if (sendbits = sendto(sockfd, (const char *)ACK, strlen(ACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
-                perror("failed to send ACK");
-                exit(1);
+        for (connection = 0; connection <= fdmax; connection++) {
+            if (FD_ISSET(connection, &read_fds)) {
+                if (connection == sockfd) {
+                    //new connection recieved
+                    addr_size = sizeof(client_sock);
+                    if ((userfd = accept(sockfd, (struct sockaddr *)&client_sock, &addr_size)) == -1) {
+                        perror("ERROR: accept");
+                    }
+                    else {
+                        FD_SET(userfd, &master);
+                        if (userfd > fdmax) {
+                            fdmax = userfd;
+                        }
+                        printf("new connection made on aocket %d\n", userfd);
+                    }
+
+                }
+                else {
+                    if ((numbytes = recv(connection, buffer, BUF_SIZE, 0)) == -1) {
+                        perror("ERROR: recv");
+                        close(connection);
+                        FD_CLR(connection, &master);
+                    }
+                    if (numbytes == 0) {
+                        printf("socket %d closed\n", connection);
+                        close(connection);
+                        FD_CLR(connection, &master);
+                    }
+                    else {
+                        message_handler(connection, buffer);
+                    }
+                }
             }
-
-            //break the while loop when all packets are recieved
-            if (new_packet->frag_no == new_packet->total_frag) {
-                printf("break: all packets received\n");
-                break;
-            }	    
         }
-        else { //if not send NACK to the client
-            if (sendbits = sendto(sockfd, (const char *)NACK, strlen(NACK), 0, (struct sockaddr *)&client_sock, sizeof(cliaddr)) == -1) {
-                perror("failed to send NACK");
-                exit(1);
-            }
-            continue; //continue the loop with out incrementing the curr_packet number 
-        }
-    
-        curr_packet++;
     }
-
-    // close up
-    close(sockfd); 
-    fclose(fptr);
-    
-    return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
