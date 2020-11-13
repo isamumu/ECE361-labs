@@ -102,7 +102,7 @@ void login(char *cmd, int *sockfd){
 
         if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
-			close(*socketfd_p);
+			close(sockfd);
             *sockfd = INVALID_SOCKET;
 			return;
         }
@@ -116,13 +116,13 @@ void login(char *cmd, int *sockfd){
 
         } else if (msg.type == LO_NAK) {
             fprintf(stdout, "login failure b/c %s\n", msg.data);
-            close(*sockfd);
+            close(sockfd);
             *sockfd = INVALID_SOCKET;
 
 			return;
         } else {
             fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg.type, msg.data);
-            close(*sockfd_p);
+            close(sockfd_p);
             *sockfd_p = INVALID_SOCKET;
             return;
         } 
@@ -154,7 +154,7 @@ void logout(int *sockfd, pthread_t *rcv_thread){
 	} 
 
     joined = false;
-    close(*sockfd);
+    close(sockfd);
     *sockfd = INVALID_SOCKET;
 
 }

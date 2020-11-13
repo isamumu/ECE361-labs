@@ -25,12 +25,42 @@ struct message {
     unsigned char data[MAX_DATA];
 };
 
+// for each joined user
+struct user {
+    char name[MAX_NAME];
+    char password[MAX_NAME];
+    char sessionID[MAX_NAME];
+    int sockfd; // used as ref to send to every user in the linked list
+	struct user *next;
+	int user_cnt = 0; //change on the dummy
+
+};
+
+// for each session created
 struct session {
 	char *sesionName;
 	int session_number;
-	int socketfds[10];
-	int fd_count = 0;
+	//int socketfds[10];
+	int fd_count = 0; //change on the dummy
+	struct user *users;
+	struct session *next;
 }
+
+// TODO Hannah
+void addSession(struct session *sessions, struct session *mySession);
+void addUser(struct user *users, struct user *myUser);
+
+void removeSession(struct session *sessions, struct session *mySession);
+void removeUser(struct user *users, struct user *myUser);
+
+void printSessions(struct session *sessions);
+void printUsers(struct user *users);
+
+// TODO Isamu
+void sendToSession(struct user *users);
+void initSession(struct session *sessions);
+
+
 //note to self: function changes the content the pointer is pointing to
 // packet to string
 void formatMessage(struct message * myPacket, char *packetString) {
