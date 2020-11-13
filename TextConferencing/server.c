@@ -16,7 +16,7 @@
 #define SESSION_SIZE 10
 #define USER_SIZE 10
 
-char *sessionList[10];
+char *sessionList[10]; //subject to change into a linkedlist
 struct user userlist[10];
 int userCount = 0;
 
@@ -31,15 +31,32 @@ void message_handler(int sockfd, char *msgRecv) {
         //exit the server
     }
     else if (newMsg.type == JOIN) {
+        //find the session in the session list
+        //put the sockfd to the sockfdlist
+        //assign a session number
+        //send back ACK and NACK accordingly
+    }
+    else if (newMsg.type == LEAVE_SESS) {
+        //delete the session from the session list
+        //send back ACK and NACK
+    }
+    else if (newMsg.type == NEW_SESS) {
         //check if max seesion number has reached
         //create a new session and put the sockfd into the sockfd list
         //increment the fd count
         //add the new session to the session list
+        //assign a session number
         //send back ACK and NACK accordingly
     }
-    else if (newMsg.type == LEAVE_SESS) {
-        //
+    else if (newMsg.type == MESSAGE) {
+        //check the session that the sender is in
+        //send the message to everyone (every sockfd) in the sockfdlist of that session
     }
+    else { // newMsg.type == QUERY
+        //print out the list of user and avaliable sessions
+        //send back ACK
+    }
+    return;
 }
 
 int main(int argc, char *argv[]){
