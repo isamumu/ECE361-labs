@@ -42,9 +42,9 @@ struct session {
 	//int session_number;
 	//int socketfds[10];
 	//int user_cnt = 0; //change on the dummy
-	int session_cnt = 0; //change on first node
+	int session_cnt = -1; //change on first node
 	struct user *users;
-	struct session *next;
+	struct session *next = NULL; // i think this is good practice?
 };
 
 // TODO Hannah
@@ -57,6 +57,8 @@ void addSession(struct session *head, struct session *mySession) {
 	while (ptr->next != NULL) {
 		ptr = ptr->next;
 	}
+
+	mySession->users->user_cnt = 0;
 
 	ptr->next = mySession;
 	mySession->next = NULL;
