@@ -75,11 +75,38 @@ void message_handler(int sockfd, char *msgRecv) {
         //put the sockfd to the sockfdlist
         //assign a session number
         //send back ACK and NACK accordingly
+        struct session *session_found = findSession(session_list, newMsg->data);
+        struct user *this_user = findUser(user_list, sockfd);
+        if (this_user->sessionID == NULL) {
+            this_user->sessionID = newMsg->data;
+            respMsg->type = JN_ACK;
+            addUser(session_found->users, this_user);
+        }
+        else {
+            respMsg->type = JN_NACK;
+        }
+
+        formatMessage(respMsg, buff);
+
+        if ((nbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+            fprintf(stderr, "ACK error\n");
+            close(sockfd);
+            return;
+        }
     }
     else if (newMsg.type == LEAVE_SESS) {
         //delete the session from the session list
         //send back ACK and NACK
         //if every user leaves the linked list, then we change the name of session back to NULL
+        struct session *session_found = findSession(session_list, newMsg->data);
+        struct user *this_user = findUser(user_list, sockfd);
+        if (this_user->sessionID != NULL) {
+            this_user->sessionID = NULL;
+            removeUser(session_found->users, this_user);
+            if (session_found->users->user_cnt == 0) {
+                removeSession(session_list, newMsg->data);
+            }
+        }
     } 
     else if (newMsg.type == NEW_SESS) {
         //check if max seesion number has reached
@@ -88,6 +115,26 @@ void message_handler(int sockfd, char *msgRecv) {
         //add the new session to the session list
         //assign a session number
         //send back ACK and NACK accordingly
+        //struct session *session_found = findSession(session_list, newMsg->data);
+        struct user *this_user = findUser(user_list, sockfd);
+        struct session *newSession;
+        newSession->sessionName = newMsg->data;
+        newSession->user = this_user;
+        newSession->user->user_cnt = 1;
+        newSession->next = NULL;
+        if (this_user->sessionID == NULL) {
+            this_user->sessionID = newMsg->data;
+            addSession(session_list, newSession);
+            respMsg->type = NS_ACK;
+        }
+        
+        formatMessage(respMsg, buff);
+
+        if ((nbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+            fprintf(stderr, "ACK error\n");
+            close(sockfd);
+            return;
+        }
     }
     else if (newMsg.type == MESSAGE) {
         //check the session that the sender is in
