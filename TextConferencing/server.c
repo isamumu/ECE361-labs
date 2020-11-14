@@ -60,7 +60,7 @@ void message_handler(int sockfd, char *msgRecv) {
 
         formatMessage(respMsg, buff);
 
-        if((numbytes = send(*sockfd, buff, BUF_SIZE - 1, 0)) == -1){
+        if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
             fprintf(stderr, "ACK error\n");
             close(sockfd);
             return;
