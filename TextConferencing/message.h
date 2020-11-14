@@ -29,7 +29,7 @@ struct message {
 struct user {
     char name[MAX_NAME];
     char password[MAX_NAME];
-    char sessionID[MAX_NAME];
+    char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
 	struct user *next;
 	int user_cnt = 0; //change on the dummy
@@ -76,6 +76,38 @@ void addUser(struct user *head, struct user *myUser) {
 	ptr->next = myUser;
 	myUser->next = NULL;
 	return;
+}
+
+struct session *findSession(struct session *head, char *name) {
+	if (head == NULL) {
+		printf("findSession: head is null\n");
+		return NULL;
+	}
+	struct session *ptr = head;
+	while (ptr != NULL) {
+		if (strcmp(pptr->sessionName, name) == 0) {
+			return ptr;
+		}
+		ptr = ptr->next;
+	}
+	printf("findSession: session not found\n");
+	return NULL;
+}
+
+struct user *findUser(struct user *head, int fd) {
+	if (head == NULL) {
+		printf("findUser: head is null\n");
+		return NULL;
+	}
+	struct session *ptr = head;
+	while (ptr != NULL) {
+		if (strcmp(pptr->sockfd, fd) == 0) {
+			return ptr;
+		}
+		ptr = ptr->next;
+	}
+	printf("findSession: session not found\n");
+	return NULL;
 }
 
 void removeSession(struct session *head, struct session *mySession) {
