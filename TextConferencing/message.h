@@ -38,23 +38,148 @@ struct user {
 
 // for each session created
 struct session {
-	char *sesionName;
-	int session_number;
+	char *sessionName;
+	//int session_number;
 	//int socketfds[10];
-	int fd_count = 0; //change on the dummy
+	//int user_cnt = 0; //change on the dummy
+	int session_cnt = 0; //change on first node
 	struct user *users;
 	struct session *next;
-}
+};
 
 // TODO Hannah
-void addSession(struct session *sessions, struct session *mySession);
-void addUser(struct user *users, struct user *myUser);
+void addSession(struct session *head, struct session *mySession) {
+	if (head == NULL) {
+		printf("addSession: head is null\n");
+		return;
+	}
+	struct session *ptr = head;
+	while (ptr->next != NULL) {
+		ptr = ptr->next;
+	}
 
-void removeSession(struct session *sessions, struct session *mySession);
-void removeUser(struct user *users, struct user *myUser);
+	ptr->next = mySession;
+	mySession->next = NULL;
+	return;
+}
 
-void printSessions(struct session *sessions);
-void printUsers(struct user *users);
+void addUser(struct user *head, struct user *myUser) {
+	if (head == NULL) {
+		printf("addUser: head is null\n");
+		return;
+	}
+	struct user *ptr = head;
+	while (ptr->next != NULL) {
+		ptr = ptr->next;
+	}
+
+	ptr->next = myUser;
+	myUser->next = NULL;
+	return;
+}
+
+void removeSession(struct session *head, struct session *mySession) {
+	if (head == NULL) {
+		printf("removeSession: head is null\n");
+		return;
+	}
+	struct session *ptr = head;
+	if (strcmp(ptr->sessionName, mySession->sessionName) == 0) {
+		head->next->session_cnt = head->session_cnt;
+		head = head->next;
+		free(ptr);
+		return;
+	}
+
+	struct session *pptr = head->next;
+	while (pptr != NULL) {
+		if (strcmp(pptr->sessionName, mySession->sessionName) == 0) {
+			ptr->next = pptr->next;
+			pptr->next = NULL;
+			free(pptr);
+			return;
+		}
+		pptr = pptr->next;
+		ptr = ptr->next;
+	}
+	printf("removeSession: session not found\n");
+	return;
+}
+void removeUser(struct user *head, struct user *myUser) {
+	if (head == NULL) {
+		printf("removeUser: head is null\n");
+		return;
+	}
+	struct user *ptr = head;
+	if (strcmp(ptr->name, myUser->name) == 0) {
+		head->next->user_cnt = head->user_cnt;
+		head = head->next;
+		free(ptr);
+		return;
+	}
+
+	struct user *pptr = head->next;
+	while (pptr != NULL) {
+		if (strcmp(pptr->name, myUser->name) == 0) {
+			ptr->next = pptr->next;
+			pptr->next = NULL;
+			free(pptr);
+			return;
+		}
+		pptr = pptr->next;
+		ptr = ptr->next;
+	}
+	printf("removeUser: user not found / not logged in\n");
+	return;
+}
+
+void printUser(struct user *curr) {
+	if (curr == NULL) {
+		printf("NULL\n");
+		return;
+	}
+	printf("username: %s\n", curr->name);
+	printf("password: %%s\n", curr->password); //for debug
+	printf("sessionID: %s\n", curr->sessionID); //for debug
+	printf("socket: %d\n", curr->sockfd); //for debug
+}
+
+void printUsers(struct user *head) {
+	if (head == NULL) {
+		printf("printUsers: head is null\n");
+		return;
+	}
+	struct user *ptr = head;
+	while (ptr != NULL) {
+		printUser(ptr);
+		ptr = ptr->next;
+	}
+	return;
+}
+
+void printSess(struct session *curr) {
+	if (curr == NULL) {
+		printf("NULL\n");
+		return;
+	}
+	printf("session ID: %s\n", curr->sessionName);
+	printf("contianed Users:\n");
+	printf("---------------------\n");
+	printUsers(curr->users);
+}
+
+void printSessions(struct session *head) {
+	if (head == NULL) {
+		printf("printSessions: head is null\n");
+		return;
+	}
+	struct session *ptr = head;
+	while (ptr != NULL) {
+		printSess(ptr);
+		ptr = ptr->next;
+	}
+	return;
+}
 
 // TODO Isamu
 void sendToSession(struct user *users);

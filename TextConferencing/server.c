@@ -29,9 +29,9 @@
 //TODO: create dictionary of user and password
 // Isamu
 
-char *sessionList[SESSION_SIZE]; //subject to change into a linkedlist
-struct user userlist[10];
-int userCount = 0;
+//inside each session there is another users list for all the users that joined the session.
+struct session *session_list; //list for all the sessions being created
+struct user *user_list; //list for every users currently logged in
 
 void message_handler(int sockfd, char *msgRecv) {
     struct message *newMsg, *respMsg;
