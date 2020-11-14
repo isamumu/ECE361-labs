@@ -31,8 +31,8 @@ struct user {
     char password[MAX_NAME];
     char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
-	struct user *next;
-	int user_cnt = 0; //change on the dummy
+	struct user *next = NULL; // NOTE: init to null here
+	int user_cnt = -1; //change on the dummy to 0
 
 };
 
@@ -42,9 +42,9 @@ struct session {
 	//int session_number;
 	//int socketfds[10];
 	//int user_cnt = 0; //change on the dummy
-	int session_cnt = 0; //change on first node
+	int session_cnt = -1; //change on first node
 	struct user *users;
-	struct session *next;
+	struct session *next = NULL; // i think this is good practice?
 };
 
 // TODO Hannah
@@ -58,8 +58,12 @@ void addSession(struct session *head, struct session *mySession) {
 		ptr = ptr->next;
 	}
 
+	mySession->users->user_cnt = 0;
+
 	ptr->next = mySession;
 	mySession->next = NULL;
+	head->session_cnt += 1;
+
 	return;
 }
 
@@ -75,6 +79,9 @@ void addUser(struct user *head, struct user *myUser) {
 
 	ptr->next = myUser;
 	myUser->next = NULL;
+	head->user_cnt += 1;
+
+
 	return;
 }
 
@@ -85,7 +92,7 @@ struct session *findSession(struct session *head, char *name) {
 	}
 	struct session *ptr = head;
 	while (ptr != NULL) {
-		if (strcmp(pptr->sessionName, name) == 0) {
+		if (strcmp(ptr->sessionName, name) == 0) {
 			return ptr;
 		}
 		ptr = ptr->next;
@@ -101,7 +108,7 @@ struct user *findUser(struct user *head, int fd) {
 	}
 	struct session *ptr = head;
 	while (ptr != NULL) {
-		if (strcmp(pptr->sockfd, fd) == 0) {
+		if (strcmp(ptr->sockfd, fd) == 0) {
 			return ptr;
 		}
 		ptr = ptr->next;
@@ -110,13 +117,17 @@ struct user *findUser(struct user *head, int fd) {
 	return NULL;
 }
 
+// prone to bugs
 void removeSession(struct session *head, struct session *mySession) {
 	if (head == NULL) {
 		printf("removeSession: head is null\n");
 		return;
 	}
+
 	struct session *ptr = head;
+	// if the session of interest is the head
 	if (strcmp(ptr->sessionName, mySession->sessionName) == 0) {
+		head->session_cnt -= 1;
 		head->next->session_cnt = head->session_cnt;
 		head = head->next;
 		free(ptr);
@@ -137,11 +148,14 @@ void removeSession(struct session *head, struct session *mySession) {
 	printf("removeSession: session not found\n");
 	return;
 }
+
+// prone to bugs
 void removeUser(struct user *head, struct user *myUser) {
 	if (head == NULL) {
 		printf("removeUser: head is null\n");
 		return;
 	}
+	head->user_cnt -= 1;
 	struct user *ptr = head;
 	if (strcmp(ptr->name, myUser->name) == 0) {
 		head->next->user_cnt = head->user_cnt;
@@ -214,8 +228,63 @@ void printSessions(struct session *head) {
 }
 
 // TODO Isamu
-void sendToSession(struct user *users);
-void initSession(struct session *sessions);
+// TODO make sure that the next of the last element is always null!
+
+// we start with a dummy session head and its dummy user linked list heads 
+void sendToPeers(struct session *head, struct user *myUser, char *message){
+	struct session *ptr = head;
+	struct session *nextSession;
+	struct user *myPtr, *nextUser;
+	int numbytes;
+
+	if(strcmp(myUser->sessionID, ptr->sessionName) == 0){
+		myPtr = ptr->users->next;
+		
+		while (myPtr != NULL){
+			// send to each element of the list
+			
+			if((numbytes = send(myPtr->sockfd, message, BUF_SIZE - 1, 0)) == -1){
+				fprintf(stderr, "ACK error\n");
+				close(sockfd);
+				return;
+			}
+			nextUser = myPtr->next;
+			myPtr = nextUser;
+		}
+
+	} else{
+		while(strcmp(myUser->sessionID, ptr->sessionName) != 0){
+			nextSession = ptr->next;
+			ptr = nextSession;
+		} 
+
+		myPtr = ptr->users->next;
+		
+		while (myPtr != NULL){
+			// send to each element of the list
+			
+			if((numbytes = send(myPtr->sockfd, message, BUF_SIZE - 1, 0)) == -1){
+				fprintf(stderr, "ACK error\n");
+				close(sockfd);
+				return;
+			}
+			nextUser = myPtr->next;
+			myPtr = nextUser;
+		}
+	}
+}
+
+// in main we should make sure that the limit is not exceeded
+// assuming that we found an empty session here.
+void initSession(struct session *sessions, char *sessionID, struct user *newUser){
+	struct session *ptr = sessions;
+	struct user *myUser;
+
+	ptr->sessionName = sessionID;
+	myUser = ptr->users->next;
+	myUser->next = newUser;
+
+}
 
 
 //note to self: function changes the content the pointer is pointing to
