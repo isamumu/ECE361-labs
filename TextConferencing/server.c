@@ -157,7 +157,6 @@ int main(int argc, char *argv[]){
     struct user *user_list; //list for every users currently logged in
     
     // INIT DUMMY HEADS
-
     session_list->session_cnt = 0;
     user_list = session_list->users;
     user_list->user_cnt = 0;
