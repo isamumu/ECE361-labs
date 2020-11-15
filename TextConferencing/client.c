@@ -102,9 +102,9 @@ void login(char *cmd, int *sockfd, char *inaddr){
         struct message *msg;
 
         msg->type = LOGIN;
-        strncpy(msg.source, id, MAX_NAME);
-        strncpy(msg.data, password, MAX_DATA);
-        msg->size = strlen(msg.data);
+        strncpy(msg->source, id, MAX_NAME);
+        strncpy(msg->data, password, MAX_DATA);
+        msg->size = strlen(msg->data);
         
         formatMessage(&msg, buff);
 
@@ -133,12 +133,12 @@ void login(char *cmd, int *sockfd, char *inaddr){
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
-            close(sockfd);
+            close(*sockfd);
             *sockfd = INVALID_SOCKET;
 
             return;
         } else {
-            fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg.type, msg.data);
+            fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg->type, msg->data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
             close(*sockfd);
@@ -192,12 +192,12 @@ void joinsession(char *session, int sockfd) {
         int bytes;
 
         formatMessage(newMessage, buff);
-        if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
+        if ((bytes = send(*sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
 
-        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+        if ((bytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
 			fprintf(stderr, "ERROR: nothing received\n");
 			return;
 		}
