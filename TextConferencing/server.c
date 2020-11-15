@@ -30,9 +30,9 @@
 //inside each session there is another users list for all the users that joined the session.
 struct session *session_list = NULL; //list for all the sessions being created
 struct user *user_list = NULL; //list for every users currently logged in
-struct account *user1;
-struct account *user2;
-struct account *accounts;
+//struct account *user1;
+//struct account *user2;
+struct account *accounts = NULL;
 
 void message_handler(int sockfd, char *msgRecv) {
     struct message *newMsg, *respMsg;
@@ -189,6 +189,8 @@ int main(int argc, char *argv[]){
     //printf("i'm here\n");
 
     // initialize users
+    struct account *user1 = (struct account *)malloc(sizeof(struct account));
+    struct account *user2 = (struct account *)malloc(sizeof(struct account));
     user1->id = isamu;
     user1->password = ECE2T1;
     user1->next = user2;
@@ -196,6 +198,7 @@ int main(int argc, char *argv[]){
     user2->id = hannah;
     user2->password = ECE2T2;
     user2->next = NULL;
+    accounts = user1;
 
     //===================Section 1=====================================================
     struct sockaddr_in cliaddr;
