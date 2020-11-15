@@ -28,8 +28,8 @@
 // Isamu
 
 //inside each session there is another users list for all the users that joined the session.
-struct session *session_list; //list for all the sessions being created
-struct user *user_list; //list for every users currently logged in
+struct session *session_list = NULL; //list for all the sessions being created
+struct user *user_list = NULL; //list for every users currently logged in
 
 void message_handler(int sockfd, char *msgRecv) {
     struct message *newMsg, *respMsg;
@@ -43,10 +43,10 @@ void message_handler(int sockfd, char *msgRecv) {
     if (newMsg->type == LOGIN) {
         char *password = newMsg->data;
         char *id = newMsg->source;
-        bool match = false;
+        //bool match = false;
         
         //TODO: match and find user and password from list
-
+	bool match = true;
         //check for user name and password
         //send back ACK and NACK accordingly
         if(match){
@@ -152,6 +152,23 @@ void message_handler(int sockfd, char *msgRecv) {
     return;
 }
 
+void list_init(void) {
+    struct session *mysession = (struct session *)malloc(sizeof(struct session));
+    mysession->session_cnt = 0;
+    mysession->users = NULL;
+    mysession->next = NULL;
+    mysession->sessionName = NULL;
+    session_list = mysession;
+
+    struct user *myuser = (struct user *)malloc(sizeof(struct user));
+    myuser->sessionID = NULL;
+    myuser->sockfd = -1;
+    myuser->user_cnt = 0;
+    myuser->next = NULL;
+    user_list = myuser;
+    return;
+}
+
 int main(int argc, char *argv[]){
     
     //TODO: create dictionary of user and password
@@ -162,10 +179,12 @@ int main(int argc, char *argv[]){
     //struct user *user_list; //list for every users currently logged in
     
     // INIT DUMMY HEADS
-    session_list->session_cnt = 0;
-    user_list = session_list->users;
-    user_list->user_cnt = 0;
 
+    /*session_list->session_cnt = 0;
+    session_list->users = NULL;
+    user_list = session_list->users;
+    user_list->user_cnt = 0;*/
+    //printf("i'm here\n");
     //===================Section 1=====================================================
     struct sockaddr_in cliaddr;
     struct sockaddr_storage client_sock; //client connection
@@ -177,11 +196,10 @@ int main(int argc, char *argv[]){
     fd_set master;
     fd_set read_fds;
     int fdmax;
-
     int connection, other_connection;
 
     int yes = 1;
-
+    list_init();
     FD_ZERO(&master);
     FD_ZERO(&read_fds);
     
@@ -189,8 +207,10 @@ int main(int argc, char *argv[]){
      
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
+    //hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = SOCK_STREAM;
+    //hints.ai_protocol = IPPROTO_UDP;
+    hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE; // use my I
  
     // obtain IP address 
