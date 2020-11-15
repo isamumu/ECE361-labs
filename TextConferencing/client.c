@@ -133,7 +133,7 @@ void login(char *cmd, int sockfd, char *inaddr){
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
-            close(*sockfd);
+            close(sockfd);
             sockfd = -1;
 
             return;
