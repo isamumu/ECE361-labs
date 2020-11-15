@@ -31,9 +31,8 @@ struct user {
     char password[MAX_NAME];
     char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
-	struct user *next = NULL; // NOTE: init to null here
-	int user_cnt = -1; //change on the dummy to 0
-
+    struct user *next;// = NULL; // NOTE: init to null here
+    int user_cnt;// = -1; //change on the dummy to 0
 };
 
 // for each session created
@@ -42,9 +41,9 @@ struct session {
 	//int session_number;
 	//int socketfds[10];
 	//int user_cnt = 0; //change on the dummy
-	int session_cnt = -1; //change on first node
+	int session_cnt;// = -1; //change on first node
 	struct user *users;
-	struct session *next = NULL; // i think this is good practice?
+	struct session *next;// = NULL; // i think this is good practice?
 };
 
 // TODO Hannah
@@ -106,9 +105,9 @@ struct user *findUser(struct user *head, int fd) {
 		printf("findUser: head is null\n");
 		return NULL;
 	}
-	struct session *ptr = head;
+	struct user *ptr = head;
 	while (ptr != NULL) {
-		if (strcmp(ptr->sockfd, fd) == 0) {
+		if (ptr->sockfd == fd) {
 			return ptr;
 		}
 		ptr = ptr->next;
@@ -118,7 +117,7 @@ struct user *findUser(struct user *head, int fd) {
 }
 
 // prone to bugs
-void removeSession(struct session *head, struct session *mySession) {
+void removeSession(struct session *head, char *sessName) {
 	if (head == NULL) {
 		printf("removeSession: head is null\n");
 		return;
@@ -126,7 +125,7 @@ void removeSession(struct session *head, struct session *mySession) {
 
 	struct session *ptr = head;
 	// if the session of interest is the head
-	if (strcmp(ptr->sessionName, mySession->sessionName) == 0) {
+	if (strcmp(ptr->sessionName, sessName) == 0) {
 		head->session_cnt -= 1;
 		head->next->session_cnt = head->session_cnt;
 		head = head->next;
@@ -136,7 +135,7 @@ void removeSession(struct session *head, struct session *mySession) {
 
 	struct session *pptr = head->next;
 	while (pptr != NULL) {
-		if (strcmp(pptr->sessionName, mySession->sessionName) == 0) {
+		if (strcmp(pptr->sessionName, sessName) == 0) {
 			ptr->next = pptr->next;
 			pptr->next = NULL;
 			free(pptr);
@@ -231,7 +230,7 @@ void printSessions(struct session *head) {
 // TODO make sure that the next of the last element is always null!
 
 // we start with a dummy session head and its dummy user linked list heads 
-void sendToPeers(struct session *head, struct user *myUser, char *message){
+void sendToPeers(struct session *head, struct user *myUser, char *message, int sockfd){
 	struct session *ptr = head;
 	struct session *nextSession;
 	struct user *myPtr, *nextUser;
@@ -312,13 +311,13 @@ struct message *formatString(char * buf) {
 	myString[0] = strtok(buf, ":");
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
-	myString[3] = strtok(NULL, ":");
+	//myString[3] = strtok(NULL, ":");
 	packet_rcv->type = atoi(myString[0]);
 	packet_rcv->size = atoi(myString[1]);
-    packet_rcv->source = myString[2];
+        strcpy(packet_rcv->source, myString[2]);
 	int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
 	memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
-	print_packet(packet_rcv);
+	print_message(packet_rcv);
 	return packet_rcv;
 }
  

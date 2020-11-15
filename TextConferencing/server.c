@@ -11,7 +11,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
-#include <message.h>
+#include <stdbool.h>
+#include "message.h"
 
 #define BACKLOG 10
 #define SESSION_SIZE 10
@@ -26,16 +27,20 @@
 //      create 5 dummy user linked list (with only head) with NULL sessionID
 // Isamu
 
+//inside each session there is another users list for all the users that joined the session.
+struct session *session_list; //list for all the sessions being created
+struct user *user_list; //list for every users currently logged in
+
 void message_handler(int sockfd, char *msgRecv) {
     struct message *newMsg, *respMsg;
     newMsg = formatString(msgRecv);
-    char *buff[BUF_SIZE];
+    char buff[BUF_SIZE];
     int numbytes;
 
     // TODO after creating linked list functions, implement 
     // Hannah: session functions (create join and leave)
     // Isamu: rest
-    if (newMsg.type == LOGIN) {
+    if (newMsg->type == LOGIN) {
         char *password = newMsg->data;
         char *id = newMsg->source;
         bool match = false;
@@ -45,9 +50,9 @@ void message_handler(int sockfd, char *msgRecv) {
         //check for user name and password
         //send back ACK and NACK accordingly
         if(match){
-            respMsg.type = LO_ACK;
+            respMsg->type = LO_ACK;
         } else{
-            respMsg.type = LO_NACK;
+            respMsg->type = LO_NACK;
         }
 
         formatMessage(respMsg, buff);
@@ -58,11 +63,11 @@ void message_handler(int sockfd, char *msgRecv) {
             return;
         }
     }
-    else if (newMsg.type == EXIT) {
+    else if (newMsg->type == EXIT) {
         //exit the server
         //get rid of sockfd
     }
-    else if (newMsg.type == JOIN) {
+    else if (newMsg->type == JOIN) {
         //find the session in the session list
         //put the sockfd to the sockfdlist
         //assign a session number
@@ -80,13 +85,13 @@ void message_handler(int sockfd, char *msgRecv) {
 
         formatMessage(respMsg, buff);
 
-        if ((nbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+        if ((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
             fprintf(stderr, "ACK error\n");
             close(sockfd);
             return;
         }
     }
-    else if (newMsg.type == LEAVE_SESS) {
+    else if (newMsg->type == LEAVE_SESS) {
         //delete the session from the session list
         //send back ACK and NACK
         //if every user leaves the linked list, then we change the name of session back to NULL
@@ -100,7 +105,7 @@ void message_handler(int sockfd, char *msgRecv) {
             }
         }
     } 
-    else if (newMsg.type == NEW_SESS) {
+    else if (newMsg->type == NEW_SESS) {
         //check if max seesion number has reached
         //create a new session and put the sockfd into the sockfd list
         //increment the fd count
@@ -111,8 +116,8 @@ void message_handler(int sockfd, char *msgRecv) {
         struct user *this_user = findUser(user_list, sockfd);
         struct session *newSession;
         newSession->sessionName = newMsg->data;
-        newSession->user = this_user;
-        newSession->user->user_cnt = 1;
+        newSession->users = this_user;
+        newSession->users->user_cnt = 1;
         newSession->next = NULL;
         if (this_user->sessionID == NULL) {
             this_user->sessionID = newMsg->data;
@@ -122,23 +127,23 @@ void message_handler(int sockfd, char *msgRecv) {
         
         formatMessage(respMsg, buff);
 
-        if ((nbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+        if ((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
             fprintf(stderr, "ACK error\n");
             close(sockfd);
             return;
         }
     }
-    else if (newMsg.type == MESSAGE) {
+    else if (newMsg->type == MESSAGE) {
         //check the session that the sender is in
         //send the message to everyone (every sockfd) in the sockfdlist of that session
     }
     else { // newMsg.type == QUERY
         //print out the list of user and avaliable sessions
         //send back ACK
-        respMsg.type = QU_ACK;
+        respMsg->type = QU_ACK;
         formatMessage(respMsg, buff);
 
-        if((numbytes = send(*sockfd, buff, BUF_SIZE - 1, 0)) == -1){
+        if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
             fprintf(stderr, "ACK error\n");
             close(sockfd);
             return;
@@ -153,8 +158,8 @@ int main(int argc, char *argv[]){
     // Isamu
 
     //inside each session there is another users list for all the users that joined the session.
-    struct session *session_list; //list for all the sessions being created
-    struct user *user_list; //list for every users currently logged in
+    //struct session *session_list; //list for all the sessions being created
+    //struct user *user_list; //list for every users currently logged in
     
     // INIT DUMMY HEADS
     session_list->session_cnt = 0;
