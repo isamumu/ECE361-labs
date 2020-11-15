@@ -1,10 +1,10 @@
-TARGET = server deliver
+TARGET = server client
 all: ${TARGET}
 
-server: server.c packet.h 
+server: server.c message.h 
 	gcc -o server server.c
 
-client: client.c packet.h
+client: client.c message.h
 	gcc -o client client.c
 
 clean:
