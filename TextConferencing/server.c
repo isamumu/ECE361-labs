@@ -30,6 +30,9 @@
 //inside each session there is another users list for all the users that joined the session.
 struct session *session_list = NULL; //list for all the sessions being created
 struct user *user_list = NULL; //list for every users currently logged in
+struct account *user1;
+struct account *user2;
+struct account *accounts;
 
 void message_handler(int sockfd, char *msgRecv) {
     struct message *newMsg, *respMsg;
@@ -49,7 +52,7 @@ void message_handler(int sockfd, char *msgRecv) {
 	bool match = true;
         //check for user name and password
         //send back ACK and NACK accordingly
-        if(match){
+        if(findUser(accounts, id, password)){
             respMsg->type = LO_ACK;
         } else{
             respMsg->type = LO_NACK;
@@ -179,12 +182,21 @@ int main(int argc, char *argv[]){
     //struct user *user_list; //list for every users currently logged in
     
     // INIT DUMMY HEADS
-
     /*session_list->session_cnt = 0;
     session_list->users = NULL;
     user_list = session_list->users;
     user_list->user_cnt = 0;*/
     //printf("i'm here\n");
+
+    // initialize users
+    user1->id = isamu;
+    user1->password = ECE2T1;
+    user1->next = user2;
+
+    user2->id = hannah;
+    user2->password = ECE2T2;
+    user2->next = NULL;
+
     //===================Section 1=====================================================
     struct sockaddr_in cliaddr;
     struct sockaddr_storage client_sock; //client connection

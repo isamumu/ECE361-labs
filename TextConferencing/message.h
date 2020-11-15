@@ -1,6 +1,7 @@
 #define MAX_NAME 1100
 #define MAX_DATA 4096
 #define BUF_SIZE 1100
+#define SIZE 20
 
 enum messageType {
 	LOGIN,
@@ -35,6 +36,13 @@ struct user {
     int user_cnt;// = -1; //change on the dummy to 0
 };
 
+struct account {
+	char username[MAX_NAME];
+	char password[MAX_NAME];
+	struct account *next;
+
+}
+
 // for each session created
 struct session {
 	char *sessionName;
@@ -45,6 +53,26 @@ struct session {
 	struct user *users;
 	struct session *next;// = NULL; // i think this is good practice?
 };
+
+bool findUser(struct account *head, char *username, char *password){
+	struct account *ptr;
+	ptr = head;
+
+	if(ptr->next == NULL){
+		return false;
+	} else{
+		while(ptr.next != NULL){
+			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username)){
+				return true;
+			} else{
+				struct account *temp = ptr->next;
+				ptr = temp;
+			}
+		}
+	}
+	
+	return false;
+}
 
 // TODO Hannah
 void addSession(struct session *head, struct session *mySession) {
