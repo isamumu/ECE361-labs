@@ -33,7 +33,7 @@ void login(char *cmd, int sockfd, char *inaddr){
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
     int numbytes;
-
+    printf("logging in....\n");
     // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
@@ -107,7 +107,8 @@ void login(char *cmd, int sockfd, char *inaddr){
         msg->size = strlen(msg->data);
         
         formatMessage(msg, buff);
-
+	printf("login message formed:\n");
+	print_message(msg);
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
 			close(sockfd);
