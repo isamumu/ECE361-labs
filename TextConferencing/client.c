@@ -9,7 +9,6 @@
 #include <netdb.h>
 #include <time.h>
 #include <stdbool.h>
-#include <pthread.h>
 #include "message.h"
 
 #define MAXDATASIZE 4096 //got this number from my ECE344 lab, subject to 
@@ -28,16 +27,14 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
-void *receive(void *sockfd); //I don't think we need this fcn however you used it in the pthread_create for the login fcn
-//I'm just adding the fcn signature here so that the compiler will pass lol
 
-void login(char *cmd, int *sockfd, char *inaddr){
+void login(char *cmd, int sockfd, char *inaddr){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
     int numbytes;
-    // extraect the above components from cmd
 
+    // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
 
@@ -54,7 +51,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
 		return;
 
-	}  else if(*sockfd != INVALID_SOCKET){
+	}  else if(sockfd != -1){
         printf("ERROR: attempted multiple logins");
         return;
 
@@ -74,14 +71,14 @@ void login(char *cmd, int *sockfd, char *inaddr){
         // referenced from Beej's code pg.35
         // get socket from server port
         for(p = servinfo; p != NULL; p = p->ai_next) {
-            if ((*sockfd = socket(p->ai_family, p->ai_socktype,
+            if ((sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
                 perror("client: socket\n");
                 continue;
             }
 
-            if (connect(*sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                close(*sockfd);
+            if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                close(sockfd);
                 perror("client: connect\n");
                 continue;
             }
@@ -91,8 +88,8 @@ void login(char *cmd, int *sockfd, char *inaddr){
 
         if (p == NULL) {
             printf("client: failed to connect\n");
-            close(*sockfd);
-            *sockfd = INVALID_SOCKET; // make the socket variable reusable for next connection 
+            close(sockfd);
+            sockfd = -1; // make the socket variable reusable for next connection 
             return;
         }
 
@@ -102,76 +99,76 @@ void login(char *cmd, int *sockfd, char *inaddr){
         freeaddrinfo(servinfo); // all done with this structure
 
         int numbytes;
-        struct message msg;
+        struct message *msg;
 
-        msg.type = LOGIN;
-        strncpy(msg.source, id, MAX_NAME);
-        strncpy(msg.data, password, MAX_DATA);
-        msg.size = strlen(msg.data);
+        msg->type = LOGIN;
+        strncpy(msg->source, id, MAX_NAME);
+        strncpy(msg->data, password, MAX_DATA);
+        msg->size = strlen(msg->data);
         
-        formatMessage(&msg, buff);
+        formatMessage(msg, buff);
 
-        if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
-			close(*sockfd);
-            *sockfd = INVALID_SOCKET;
+			close(sockfd);
+            sockfd = -1;
 			return;
         }
         
         // MESSAGE TYPES: 
         // --> LO_ACK - login successful
         // --> LO_NAK - login unsuccessful
+        
+        if ((numbytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+            fprintf(stderr, "ERROR: nothing received\n");
+            return;
+        }
+        
         buff[numbytes] = 0;
-	pthread_t *receive_thread_p;
-	
-        //if(msg.type == LO_ACK && pthread_create(receive_thread_p, NULL, receive, socketfd_p) == 0){
-	if(msg.type == LO_ACK && pthread_create(receive_thread_p, NULL, receive, sockfd) == 0){
+        msg = formatString(buff);
+    
+
+        if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
 
-        } else if (msg.type == LO_NACK) {
-            fprintf(stdout, "login failure b/c %s\n", msg.data);
-            close(*sockfd);
-            *sockfd = INVALID_SOCKET;
+        } else if (msg->type == LO_NACK) {
+            fprintf(stdout, "login failure b/c %s\n", msg->data);
+            close(sockfd);
+            sockfd = -1;
 
-			return;
+            return;
         } else {
-            fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg.type, msg.data);
+            fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg->type, msg->data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
-	    close(*sockfd);
-	    *sockfd = INVALID_SOCKET;
+            close(sockfd);
+            sockfd = -1;
             return;
         } 
     }
 }
 
-void logout(int *sockfd, pthread_t *rcv_thread){
-    if(*sockfd == INVALID_SOCKET) {
+void logout(int sockfd){
+    if(sockfd == -1) {
         fprintf(stdout, "Currently no logins found.\n");
         return;
     }
 
     int numbytes;
-    struct message msg;
-    msg.type = EXIT;
-    msg.size = 0;
+    struct message *msg;
+    msg->type = EXIT;
+    msg->size = 0;
 
-    formatMessage(&msg, buff);
+    formatMessage(msg, buff);
 
-    if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "logout error\n");
         return;
     }
 
-    if (pthread_cancel(*rcv_thread)) {
-        fprintf(stderr, "logout failed\n");
-	} else {
-        fprintf(stdout, "logout success!\n");	
-	} 
-
     joined = false;
-    close(*sockfd);
-    *sockfd = INVALID_SOCKET;
+    close(sockfd);
+    sockfd = -1;
 
 }
 
@@ -319,12 +316,12 @@ void sendMsg(int sockfd){
     }
 
     int numbytes;
-    struct message msg;
-    msg.type = MESSAGE;
+    struct message *msg;
+    msg->type = MESSAGE;
 
-    strncpy(msg.data, buff, MAX_DATA);
-    msg.size = strlen(msg.data);
-    formatMessage(&msg, buff);
+    strncpy(msg->data, buff, MAX_DATA);
+    msg->size = strlen(msg->data);
+    formatMessage(msg, buff);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
@@ -339,11 +336,11 @@ void sendMsg(int sockfd){
 int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
-    pthread_t rcv_msg;
     int len;
     
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
+        
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
         buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0
@@ -363,11 +360,11 @@ int main(int argc, char **argv){
         if (strcmp(cmd, "/login") == 0) {
             // log into the server at a given address and port
             // the IP address is specified in string dot format
-			login(cmd, &sockfd, argv[1]);
+			login(cmd, sockfd, argv[1]);
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
-			logout(&sockfd, &rcv_msg);
+			logout(sockfd);
 
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
@@ -386,7 +383,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
-			logout(&sockfd, &rcv_msg);
+			logout(sockfd);
 			break;
 
 		} else{
