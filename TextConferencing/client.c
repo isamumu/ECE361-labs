@@ -28,7 +28,7 @@ void *get_in_addr(struct sockaddr *sock_arr) {
 }
 
 
-void login(char *cmd, int *sockfd, char *inaddr){
+void login(char *cmd, int sockfd, char *inaddr){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
@@ -51,7 +51,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
 		return;
 
-	}  else if(*sockfd != INVALID_SOCKET){
+	}  else if(sockfd != -1){
         printf("ERROR: attempted multiple logins");
         return;
 
@@ -71,14 +71,14 @@ void login(char *cmd, int *sockfd, char *inaddr){
         // referenced from Beej's code pg.35
         // get socket from server port
         for(p = servinfo; p != NULL; p = p->ai_next) {
-            if ((*sockfd = socket(p->ai_family, p->ai_socktype,
+            if ((sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
                 perror("client: socket\n");
                 continue;
             }
 
-            if (connect(*sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                close(*sockfd);
+            if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                close(sockfd);
                 perror("client: connect\n");
                 continue;
             }
@@ -88,8 +88,8 @@ void login(char *cmd, int *sockfd, char *inaddr){
 
         if (p == NULL) {
             printf("client: failed to connect\n");
-            close(*sockfd);
-            *sockfd = INVALID_SOCKET; // make the socket variable reusable for next connection 
+            close(sockfd);
+            sockfd = -1; // make the socket variable reusable for next connection 
             return;
         }
 
@@ -106,12 +106,12 @@ void login(char *cmd, int *sockfd, char *inaddr){
         strncpy(msg->data, password, MAX_DATA);
         msg->size = strlen(msg->data);
         
-        formatMessage(&msg, buff);
+        formatMessage(msg, buff);
 
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
-			close(*sockfd);
-            *sockfd = INVALID_SOCKET;
+			close(sockfd);
+            sockfd = -1;
 			return;
         }
         
@@ -134,22 +134,22 @@ void login(char *cmd, int *sockfd, char *inaddr){
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
             close(*sockfd);
-            *sockfd = INVALID_SOCKET;
+            sockfd = -1;
 
             return;
         } else {
             fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg->type, msg->data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
-            close(*sockfd);
-            *sockfd = INVALID_SOCKET;
+            close(sockfd);
+            sockfd = -1;
             return;
         } 
     }
 }
 
-void logout(int *sockfd){
-    if(*sockfd == INVALID_SOCKET) {
+void logout(int sockfd){
+    if(sockfd == -1) {
         fprintf(stdout, "Currently no logins found.\n");
         return;
     }
@@ -159,16 +159,16 @@ void logout(int *sockfd){
     msg->type = EXIT;
     msg->size = 0;
 
-    formatMessage(&msg, buff);
+    formatMessage(msg, buff);
 
-    if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "logout error\n");
         return;
     }
 
     joined = false;
-    close(*sockfd);
-    *sockfd = INVALID_SOCKET;
+    close(sockfd);
+    sockfd = -1;
 
 }
 
@@ -192,12 +192,12 @@ void joinsession(char *session, int sockfd) {
         int bytes;
 
         formatMessage(newMessage, buff);
-        if ((bytes = send(*sockfd, buff, MAXBUFLEN, 0)) == -1) {
+        if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
 
-        if ((bytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
 			fprintf(stderr, "ERROR: nothing received\n");
 			return;
 		}
@@ -359,11 +359,11 @@ int main(int argc, char **argv){
         if (strcmp(cmd, "/login") == 0) {
             // log into the server at a given address and port
             // the IP address is specified in string dot format
-			login(cmd, &sockfd, argv[1]);
+			login(cmd, sockfd, argv[1]);
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
-			logout(&sockfd, &rcv_msg);
+			logout(sockfd);
 
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
@@ -382,7 +382,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
-			logout(&sockfd, &rcv_msg);
+			logout(sockfd);
 			break;
 
 		} else{
