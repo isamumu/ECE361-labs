@@ -338,9 +338,9 @@ int main(int argc, char **argv){
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
     
-    printf("hello there");
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
+        
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
         buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0
