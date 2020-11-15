@@ -78,7 +78,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
             }
 
             if (connect(*sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                close(sockfd);
+                close(*sockfd);
                 perror("client: connect\n");
                 continue;
             }
@@ -88,7 +88,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
 
         if (p == NULL) {
             printf("client: failed to connect\n");
-            close(sockfd);
+            close(*sockfd);
             *sockfd = INVALID_SOCKET; // make the socket variable reusable for next connection 
             return;
         }
@@ -141,7 +141,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
             fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg.type, msg.data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
-            close(sockfd);
+            close(*sockfd);
             *sockfd = INVALID_SOCKET;
             return;
         } 
@@ -167,7 +167,7 @@ void logout(int *sockfd){
     }
 
     joined = false;
-    close(sockfd);
+    close(*sockfd);
     *sockfd = INVALID_SOCKET;
 
 }
@@ -316,12 +316,12 @@ void sendMsg(int sockfd){
     }
 
     int numbytes;
-    struct message msg;
-    msg.type = MESSAGE;
+    struct message *msg;
+    msg->type = MESSAGE;
 
-    strncpy(msg.data, buff, MAX_DATA);
-    msg.size = strlen(msg.data);
-    formatMessage(&msg, buff);
+    strncpy(msg->data, buff, MAX_DATA);
+    msg->size = strlen(msg->data);
+    formatMessage(msg, buff);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
