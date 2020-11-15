@@ -51,7 +51,7 @@ void login(char *cmd, int *sockfd, char *inaddr){
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
 		return;
 
-	}  else if(sockfd != INVALID_SOCKET){
+	}  else if(*sockfd != INVALID_SOCKET){
         printf("ERROR: attempted multiple logins");
         return;
 
@@ -71,13 +71,13 @@ void login(char *cmd, int *sockfd, char *inaddr){
         // referenced from Beej's code pg.35
         // get socket from server port
         for(p = servinfo; p != NULL; p = p->ai_next) {
-            if ((sockfd = socket(p->ai_family, p->ai_socktype,
+            if ((*sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
                 perror("client: socket\n");
                 continue;
             }
 
-            if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            if (connect(*sockfd, p->ai_addr, p->ai_addrlen) == -1) {
                 close(sockfd);
                 perror("client: connect\n");
                 continue;
@@ -101,10 +101,10 @@ void login(char *cmd, int *sockfd, char *inaddr){
         int numbytes;
         struct message *msg;
 
-        msg.type = LOGIN;
+        msg->type = LOGIN;
         strncpy(msg.source, id, MAX_NAME);
         strncpy(msg.data, password, MAX_DATA);
-        msg.size = strlen(msg.data);
+        msg->size = strlen(msg.data);
         
         formatMessage(&msg, buff);
 
@@ -128,11 +128,11 @@ void login(char *cmd, int *sockfd, char *inaddr){
         msg = formatString(buff);
     
 
-        if(msg.type == LO_ACK){
+        if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
 
-        } else if (msg.type == LO_NACK) {
-            fprintf(stdout, "login failure b/c %s\n", msg.data);
+        } else if (msg->type == LO_NACK) {
+            fprintf(stdout, "login failure b/c %s\n", msg->data);
             close(sockfd);
             *sockfd = INVALID_SOCKET;
 
@@ -155,9 +155,9 @@ void logout(int *sockfd){
     }
 
     int numbytes;
-    struct message msg;
-    msg.type = EXIT;
-    msg.size = 0;
+    struct message *msg;
+    msg->type = EXIT;
+    msg->size = 0;
 
     formatMessage(&msg, buff);
 
