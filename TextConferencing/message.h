@@ -352,10 +352,9 @@ struct message *formatString(char * buf) {
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
 	myString[3] = strtok(NULL, "\0");
-	printf("type: ", myString[0]);
-	printf("size: ", myString[1]);
-	printf("source: ", myString[2]);
-	printf("data: ", myString[3]);
+
+	printf("source: %s", myString[2]);
+	printf("data: %s", myString[3]);
 	if (myString[0] != NULL) {
 	    packet_rcv->type = atoi(myString[0]);
 	}
