@@ -235,30 +235,33 @@ void message_handler(int sockfd, char *msgRecv) {
         //send back ACK
 	    printf("QUERY recieved\n");
         respMsg->type = QU_ACK;
-        struct session *ptr;
+        struct session *ptr = (struct session *)malloc(sizeof(struct session));
         ptr = session_list->next;
-        strcpy(respMsg->data, "hello there");
-        respMsg->size = strlen(respMsg->data);
-        strncpy(respMsg->source, "stuff", MAX_DATA);
+        //trcpy(respMsg->data, "hello there");
+        //respMsg->size = strlen(respMsg->data);
 
-        printf("resp data: %s", respMsg->data);
+        strncpy(respMsg->source, "", MAX_DATA);
 
-        /*
         for(int i = 0; i < session_list->session_cnt; i++){
-            strcat(respMsg->data, ptr->sessionName);
-            strcat(respMsg->data, ": \n");
-            struct user *uptr = session_list->next->users;
+            strcat(respMsg->source, ptr->sessionName);
+            strcat(respMsg->source, ": \n");
+            struct user *uptr = ptr->users->next;
 
-            for(int j = 0; j < uptr->user_cnt; j++){
-                strcat(respMsg->data, uptr->name);
-                strcat(respMsg->data, "\n");
+            while(1){
+                
+                strcat(respMsg->source, uptr->name);
+                strcat(respMsg->source, "\n");
+
+                if(uptr->next == NULL){
+                    break;
+                }
                 uptr = uptr->next;
             }
 
             ptr = ptr->next;
 
         }
-        */
+        
         
         memset(buff, 0, BUF_SIZE);
         formatMessage(respMsg, buff);
