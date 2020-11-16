@@ -245,11 +245,12 @@ void message_handler(int sockfd, char *msgRecv) {
         struct user *ptr = user_list->next;
         while (ptr != NULL) {
             strcat(respMsg->source, ptr->name);
-            strcat(respMsg->source, ": ");
+            strcat(respMsg->source, "->");
             strcat(respMsg->source, ptr->sessionID);
             strcat(respMsg->source, "\n");
             ptr = ptr->next;
         }
+        //printf("source: %s\n", respMsg->source);
     
         /*for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->source, ptr->sessionName);
