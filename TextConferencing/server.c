@@ -241,7 +241,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //respMsg->size = strlen(respMsg->data);
 
         strncpy(respMsg->source, "", MAX_DATA);
-
+    
         for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->source, ptr->sessionName);
             strcat(respMsg->source, ": \n");
