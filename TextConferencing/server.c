@@ -249,8 +249,8 @@ void message_handler(int sockfd, char *msgRecv) {
             strcat(data, "\n");
             ptr = ptr->next;
         }
-
-        strcpy(respMsg->source, data);
+        print("data: ", data);
+        strncpy(respMsg->source, data, MAX_DATA);
         printf("source: %s\n", respMsg->source);
     
         /*for(int i = 0; i < session_list->session_cnt; i++){
