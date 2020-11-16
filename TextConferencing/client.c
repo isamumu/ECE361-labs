@@ -113,10 +113,10 @@ int login(char *cmd, int sockfd){
         strncpy(msg->data, password, MAX_DATA);
         msg->size = strlen(msg->data);
         
-	memset(buff, 0, BUF_SIZE);
+	    memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
-	printf("login message formed:\n");
-	print_message(msg);
+        printf("login message formed:\n");
+        //print_message(msg);
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
 			close(sockfd);
@@ -199,7 +199,7 @@ void joinsession(char *session, int sockfd) {
         newMessage->type = JOIN;
         newMessage->size = strlen(session);
         strncpy(newMessage->data, session, MAX_DATA);
-	//strncpy(newMessage->source, "\0", MAX_NAME);
+	
         int bytes;
 
         formatMessage(newMessage, buff);
@@ -235,7 +235,7 @@ void leavesession(int sockfd) {
         struct message newMessage;
         newMessage.type = LEAVE_SESS;
         newMessage.size = 0;
-        //strcpy(newMessage.data, session, MAX_DATA);
+
         int bytes;
 
         formatMessage(&newMessage, buff);
@@ -260,8 +260,7 @@ void createsession(char *session, int sockfd) {
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = NEW_SESS;
         newMessage->size = strlen(session);
-	//newMessage->data = NULL;
-	//newMessage->source = NULL;
+        
         strncpy(newMessage->data, session, MAX_DATA);
         int bytes;
 
@@ -340,10 +339,7 @@ void sendMsg(int sockfd){
         fprintf(stderr, "send error\n");
         return;
     }
-
-    
 }
-
 
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
@@ -411,5 +407,4 @@ int main(int argc, char **argv){
 
     fprintf(stdout, "text conference done.\n");
     return 0;
-    
 }
