@@ -305,14 +305,14 @@ void sendToPeers(struct session *head, struct user *myUser, char *message, int s
 
 	//if we found the session
 	if(strcmp(myUser->sessionID, ptr->next->sessionName) == 0){
-		myPtr = ptr->users->next; //locate the users list
+		myPtr = ptr->next->users->next; //locate the users list
 		
 		while (myPtr != NULL){
 			// send to each element of the list
 			
 			if((numbytes = send(myPtr->sockfd, message, BUF_SIZE - 1, 0)) == -1){
 				fprintf(stderr, "ACK error\n");
-				close(sockfd);
+				//close(sockfd);
 				return;
 			}
 			nextUser = myPtr->next;
