@@ -239,6 +239,7 @@ void message_handler(int sockfd, char *msgRecv) {
         ptr = session_list->next;
         strncpy(respMsg->data, "hello there /n", MAX_DATA);
         respMsg->size = strlen(respMsg->data);
+        strncpy(respMsg->source, "stuff", MAX_DATA);
 
         /*
         for(int i = 0; i < session_list->session_cnt; i++){
