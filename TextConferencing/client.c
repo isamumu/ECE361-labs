@@ -28,7 +28,7 @@ void *get_in_addr(struct sockaddr *sock_arr) {
 }
 
 
-void login(char *cmd, int sockfd){
+int login(char *cmd, int sockfd){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
@@ -53,11 +53,11 @@ void login(char *cmd, int sockfd){
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
-		return;
+		return sockfd;
 
 	}  else if(sockfd != -1){
         printf("ERROR: attempted multiple logins");
-        return;
+        return sockfd;
 
     } else {
         //instantiate TCP protocol
@@ -71,7 +71,7 @@ void login(char *cmd, int sockfd){
         // find the IP at the specified port (FIND THE SERVER)
         if ((dummy = getaddrinfo(ip, port, &hints, &servinfo)) != 0) {
             perror("bad retrieval");
-            return;
+            return -1;
         }
         
         // referenced from Beej's code pg.35
@@ -96,7 +96,7 @@ void login(char *cmd, int sockfd){
             printf("client: failed to connect\n");
             close(sockfd);
             sockfd = -1; // make the socket variable reusable for next connection 
-            return;
+            return sockfd;
         }
 
         // at this point we have the socket, so let's connect!
@@ -120,7 +120,7 @@ void login(char *cmd, int sockfd){
             fprintf(stderr, "login error\n");
 			close(sockfd);
             sockfd = -1;
-			return;
+			return -1;
         }
         
         // MESSAGE TYPES: 
@@ -129,7 +129,7 @@ void login(char *cmd, int sockfd){
         
         if ((numbytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
             fprintf(stderr, "ERROR: nothing received\n");
-            return;
+            return -1;
         }
         
 	
@@ -138,21 +138,21 @@ void login(char *cmd, int sockfd){
 
         if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
-	    return;
+	    return sockfd;
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
             close(sockfd);
             sockfd = -1;
 
-            return;
+            return sockfd;
         } else {
             fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg->type, msg->data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
             close(sockfd);
             sockfd = -1;
-            return;
+            return sockfd;
         } 
     }
 }
@@ -194,10 +194,11 @@ void joinsession(char *session, int sockfd) {
         return;
 
     } else {
-        struct message *newMessage;
+        struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = JOIN;
         newMessage->size = strlen(session);
-        strcpy(newMessage->data, session);
+        strncpy(newMessage->data, session, MAX_DATA);
+	//strncpy(newMessage->source, "\0", MAX_NAME);
         int bytes;
 
         formatMessage(newMessage, buff);
@@ -215,10 +216,10 @@ void joinsession(char *session, int sockfd) {
         newMessage = formatString(buff);
 
         if (newMessage->type == JN_ACK) {
-            fprintf(stdout, "Join Success... session ID: %s.\n", newMessage->data);
+            fprintf(stdout, "Join Success... session ID: %s\n", newMessage->source);
             joined = true;
         } else if (newMessage->type == JN_NACK) {
-            fprintf(stdout, "Join Failed... Data: %s\n", newMessage->data);
+            fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
             joined = false;
 	}
         return;
@@ -247,27 +248,30 @@ void leavesession(int sockfd) {
 }
 
 void createsession(char *session, int sockfd) {
+    printf("creating new session\n");
     if (session == NULL) {
-        fprintf(stdout, "invalid session id, input format: /createsession <session ID>\n");
+        printf("invalid session id, input format: /createsession <session ID>\n");
         return;
     } else if (sockfd == INVALID_SOCKET) {
-        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        printf("Please login to a server before trying to join a session\n");
         return;
     } else {
-        struct message *newMessage;
+        struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = NEW_SESS;
-        newMessage->size = 0;
-        //strcpy(newMessage.data, session, MAX_DATA);
+        newMessage->size = strlen(session);
+	//newMessage->data = NULL;
+	//newMessage->source = NULL;
+        strncpy(newMessage->data, session, MAX_DATA);
         int bytes;
 
         formatMessage(newMessage, buff);
         if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
-            fprintf(stdout, "ERROR: send() failed\n");
+            printf("ERROR: send() failed\n");
             return;
         }
 
         if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-			fprintf(stderr, "ERROR: nothing received\n");
+			printf("ERROR: nothing received\n");
 			return;
 		}
 
@@ -275,10 +279,9 @@ void createsession(char *session, int sockfd) {
         newMessage = formatString(buff);
 
         if (newMessage->type == NS_ACK) {
-            fprintf(stdout, "Successfully created and joined session %s.\n", newMessage->data);
+            printf("Successfully created and joined session %s.\n", newMessage->data);
             joined = true;
         }
-
         return;
     }
 }
@@ -369,7 +372,7 @@ int main(int argc, char **argv){
         if (strcmp(cmd, "/login") == 0) {
             // log into the server at a given address and port
             // the IP address is specified in string dot format
-			login(cmd, sockfd);
+			sockfd = login(cmd, sockfd);
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
@@ -378,6 +381,7 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
             cmd = strtok(NULL, " "); //cmd should contain the session id
+			printf("session name: %s\n", cmd);
 			joinsession(cmd, sockfd);
 
 		} else if (strcmp(cmd, "/leavesession") == 0) {
@@ -386,6 +390,7 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
+			createsession(cmd, sockfd);
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
 			list(sockfd);
