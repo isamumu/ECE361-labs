@@ -40,21 +40,29 @@ void message_handler(int sockfd, char *msgRecv) {
     newMsg = formatString(msgRecv);
     char buff[BUF_SIZE];
     int numbytes;
+    if (newMsg == NULL) {
+	return;
+    }
 
     // TODO after creating linked list functions, implement 
     // Hannah: session functions (create join and leave)
     // Isamu: rest
     if (newMsg->type == LOGIN) {
 	printf("login recieved\n");
+	if (newMsg->data == NULL || newMsg->source == NULL) {
+	    return;
+	}
         char *password = newMsg->data;
         char *id = newMsg->source;
         //bool match = false;
+	
         
         //TODO: match and find user and password from list
-	bool match = true;
+	//bool match = true;
         //check for user name and password
         //send back ACK and NACK accordingly
         if(findAcct(accounts, id, password)){
+		printf("here\n");
             respMsg->type = LO_ACK;
         } else{
             respMsg->type = LO_NACK;
@@ -65,12 +73,13 @@ void message_handler(int sockfd, char *msgRecv) {
         if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
             fprintf(stderr, "ACK error\n");
             close(sockfd);
-	    free(respMsg);
-	    free(newMsg);
             return;
         }
+	free(respMsg);
+        free(newMsg);
     }
     else if (newMsg->type == EXIT) {
+	printf("Exit recieved\n");
         //exit the server
         //get rid of sockfd
     }
@@ -79,6 +88,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //put the sockfd to the sockfdlist
         //assign a session number
         //send back ACK and NACK accordingly
+	printf("JOIN recieved\n");
         struct session *session_found = findSession(session_list, newMsg->data);
         struct user *this_user = findUser(user_list, sockfd);
         if (this_user->sessionID == NULL) {
@@ -102,6 +112,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //delete the session from the session list
         //send back ACK and NACK
         //if every user leaves the linked list, then we change the name of session back to NULL
+	printf("LEAVE_SESS recieved\n");
         struct session *session_found = findSession(session_list, newMsg->data);
         struct user *this_user = findUser(user_list, sockfd);
         if (this_user->sessionID != NULL) {
@@ -120,6 +131,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //assign a session number
         //send back ACK and NACK accordingly
         //struct session *session_found = findSession(session_list, newMsg->data);
+	printf("NEW_SESS recieved\n");
         struct user *this_user = findUser(user_list, sockfd);
         struct session *newSession;
         newSession->sessionName = newMsg->data;
@@ -143,10 +155,12 @@ void message_handler(int sockfd, char *msgRecv) {
     else if (newMsg->type == MESSAGE) {
         //check the session that the sender is in
         //send the message to everyone (every sockfd) in the sockfdlist of that session
+	printf("MESSAGE recieved\n");
     }
     else { // newMsg.type == QUERY
         //print out the list of user and avaliable sessions
         //send back ACK
+	printf("QUERY recieved\n");
         respMsg->type = QU_ACK;
         formatMessage(respMsg, buff);
 
@@ -275,6 +289,7 @@ int main(int argc, char *argv[]){
         }
 
         for (connection = 0; connection <= fdmax; connection++) {
+	    printf("connection: %d\n", connection);
             if (FD_ISSET(connection, &read_fds)) {
                 if (connection == sockfd) {
                     //new connection recieved
@@ -298,10 +313,10 @@ int main(int argc, char *argv[]){
                         close(connection);
                         FD_CLR(connection, &master);
                     }
-                    if (numbytes == 0) {
-                        printf("socket %d closed\n", connection);
-                        close(connection);
-                        FD_CLR(connection, &master);
+                    if (numbytes <= 3) {
+                        printf("ignore socket %d\n", connection);
+                        //close(connection);
+                        //FD_CLR(connection, &master);
                     }
                     else {
 			printf("going through message_handler\n");
