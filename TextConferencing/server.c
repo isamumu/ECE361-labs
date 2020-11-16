@@ -235,6 +235,7 @@ void message_handler(int sockfd, char *msgRecv) {
         respMsg->type = QU_ACK;
         struct session *ptr;
         ptr = session_list->next;
+        respMsg->data = "HI";
 
         for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->data, ptr->sessionName);
