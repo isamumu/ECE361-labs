@@ -84,7 +84,6 @@ void addSession(struct session *head, struct session *mySession) {
 	while (ptr->next != NULL) {
 		ptr = ptr->next;
 	}
-
 	mySession->users->user_cnt = 0;
 
 	ptr->next = mySession;
@@ -117,7 +116,7 @@ struct session *findSession(struct session *head, char *name) {
 		printf("findSession: head is null\n");
 		return NULL;
 	}
-	struct session *ptr = head;
+	struct session *ptr = head->next;
 	while (ptr != NULL) {
 		if (strcmp(ptr->sessionName, name) == 0) {
 			return ptr;
@@ -133,14 +132,14 @@ struct user *findUser(struct user *head, int fd) {
 		printf("findUser: head is null\n");
 		return NULL;
 	}
-	struct user *ptr = head;
+	struct user *ptr = head->next;
 	while (ptr != NULL) {
 		if (ptr->sockfd == fd) {
 			return ptr;
 		}
 		ptr = ptr->next;
 	}
-	printf("findSession: session not found\n");
+	printf("findUser: user not found\n");
 	return NULL;
 }
 
@@ -212,7 +211,7 @@ void printUser(struct user *curr) {
 		return;
 	}
 	printf("username: %s\n", curr->name);
-	printf("password: %%s\n", curr->password); //for debug
+	printf("password: %s\n", curr->password); //for debug
 	printf("sessionID: %s\n", curr->sessionID); //for debug
 	printf("socket: %d\n", curr->sockfd); //for debug
 }
@@ -236,7 +235,8 @@ void printSess(struct session *curr) {
 		return;
 	}
 	printf("session ID: %s\n", curr->sessionName);
-	printf("contianed Users:\n");
+	printf("session count %d\n", curr->session_cnt);
+	printf("contianed Users\n");
 	printf("---------------------\n");
 	printUsers(curr->users);
 }

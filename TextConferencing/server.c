@@ -49,12 +49,14 @@ void message_handler(int sockfd, char *msgRecv) {
     // Isamu: rest
     if (newMsg->type == LOGIN) {
 	printf("login recieved\n");
-	if (newMsg->data == NULL || newMsg->source == NULL) {
+	if (newMsg->data == NULL || newMsg->source == NULL || newMsg->size == 0) {
 	    return;
 	}
         char *password = newMsg->data;
         char *id = newMsg->source;
+	printf("i'm here\n");
         //bool match = false;
+	struct user *newUser = (struct user *)malloc(sizeof(struct user));
 	
         
         //TODO: match and find user and password from list
@@ -62,8 +64,14 @@ void message_handler(int sockfd, char *msgRecv) {
         //check for user name and password
         //send back ACK and NACK accordingly
         if(findAcct(accounts, id, password)){
-		printf("here\n");
             respMsg->type = LO_ACK;
+	    strcpy(newUser->name, newMsg->source);
+	    strcpy(newUser->password, newMsg->data);
+	    newUser->sessionID = NULL;
+	    newUser->sockfd = sockfd;
+	    newUser->next = NULL;
+	    newUser->user_cnt = -1;
+	    addUser(user_list, newUser);
         } else{
             respMsg->type = LO_NACK;
         }
@@ -75,6 +83,7 @@ void message_handler(int sockfd, char *msgRecv) {
             close(sockfd);
             return;
         }
+	printUsers(user_list);
 	free(respMsg);
         free(newMsg);
     }
@@ -89,12 +98,29 @@ void message_handler(int sockfd, char *msgRecv) {
         //assign a session number
         //send back ACK and NACK accordingly
 	printf("JOIN recieved\n");
-        struct session *session_found = findSession(session_list, newMsg->data);
+	if (newMsg->source == NULL) {
+	   return;
+	}
+        struct session *session_found = findSession(session_list, newMsg->source);
+	if (session_found == NULL) {
+	    return;
+	}
         struct user *this_user = findUser(user_list, sockfd);
+	if (this_user == NULL) {
+	    return;
+	}
         if (this_user->sessionID == NULL) {
-            this_user->sessionID = newMsg->data;
+            this_user->sessionID = newMsg->source;
             respMsg->type = JN_ACK;
-            addUser(session_found->users, this_user);
+	    strncpy(respMsg->data, newMsg->source, MAX_DATA);
+	    struct user *myuser = (struct user *)malloc(sizeof(struct user));
+	    myuser->sessionID = this_user->sessionID;
+	    strncpy(myuser->name, this_user->name, MAX_NAME);
+	    strncpy(myuser->password, this_user->password, MAX_NAME);
+    	    myuser->sockfd = this_user->sockfd;
+    	    myuser->user_cnt = -1;
+    	    myuser->next = NULL;
+            addUser(session_found->users, myuser);
         }
         else {
             respMsg->type = JN_NACK;
@@ -107,21 +133,31 @@ void message_handler(int sockfd, char *msgRecv) {
             close(sockfd);
             return;
         }
+	printSessions(session_list);
+	printUsers(user_list);
     }
     else if (newMsg->type == LEAVE_SESS) {
         //delete the session from the session list
         //send back ACK and NACK
         //if every user leaves the linked list, then we change the name of session back to NULL
 	printf("LEAVE_SESS recieved\n");
-        struct session *session_found = findSession(session_list, newMsg->data);
         struct user *this_user = findUser(user_list, sockfd);
-        if (this_user->sessionID != NULL) {
-            this_user->sessionID = NULL;
-            removeUser(session_found->users, this_user);
+	if (this_user == NULL) {
+	   return;
+	}
+	if (this_user->sessionID != NULL) {
+            struct session *session_found = findSession(session_list, this_user->sessionID);
+	    if (session_found == NULL) {
+	    	return;
+	    }
+	    this_user->sessionID = NULL;
+	    removeUser(session_found->users, this_user);
             if (session_found->users->user_cnt == 0) {
-                removeSession(session_list, newMsg->data);
+               	removeSession(session_list, newMsg->data);
             }
-        }
+	}
+	printSessions(session_list);
+	printUsers(user_list);
     } 
     else if (newMsg->type == NEW_SESS) {
         //check if max seesion number has reached
@@ -133,13 +169,29 @@ void message_handler(int sockfd, char *msgRecv) {
         //struct session *session_found = findSession(session_list, newMsg->data);
 	printf("NEW_SESS recieved\n");
         struct user *this_user = findUser(user_list, sockfd);
-        struct session *newSession;
-        newSession->sessionName = newMsg->data;
-        newSession->users = this_user;
-        newSession->users->user_cnt = 1;
+	if (this_user == NULL) {
+	    printf("user not found\n");
+	    return;
+	}
+        struct session *newSession = (struct session *)malloc(sizeof(struct session));
+	struct user *dummy = (struct user *)malloc(sizeof(struct user));
+	struct user *myuser = (struct user *)malloc(sizeof(struct user));
+	strncpy(myuser->name, this_user->name, MAX_NAME);
+	strncpy(myuser->password, this_user->password, MAX_NAME);
+    	myuser->sockfd = this_user->sockfd;
+    	myuser->user_cnt = -1;
+    	myuser->next = NULL;
+	dummy->user_cnt = 1;
+	dummy->sessionID = NULL;
+        dummy->sockfd = -1;
+    	dummy->next = myuser;
+        newSession->sessionName = newMsg->source;
+        newSession->users = dummy;
+        //newSession->users->user_cnt = 1;
         newSession->next = NULL;
         if (this_user->sessionID == NULL) {
-            this_user->sessionID = newMsg->data;
+            this_user->sessionID = newMsg->source;
+	    myuser->sessionID = newMsg->source;
             addSession(session_list, newSession);
             respMsg->type = NS_ACK;
         }
@@ -151,6 +203,8 @@ void message_handler(int sockfd, char *msgRecv) {
             close(sockfd);
             return;
         }
+	printUsers(user_list);
+	printSessions(session_list);
     }
     else if (newMsg->type == MESSAGE) {
         //check the session that the sender is in
