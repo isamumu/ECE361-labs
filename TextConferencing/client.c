@@ -311,6 +311,7 @@ void list(int sockfd) {
 
         buff[bytes] = 0; // mark end of the string
         newMessage = formatString(buff);
+        printf("buff: ", buff);
 
         if (newMessage->type == QU_ACK) {
             printf(newMessage->data);
