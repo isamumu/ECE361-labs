@@ -265,11 +265,13 @@ void printSessions(struct session *head) {
 
 // we start with a dummy session head and its dummy user linked list heads 
 void sendToPeers(struct session *head, struct user *myUser, char *message, int sockfd){
-	struct session *ptr = head;
-	struct session *nextSession;
-	struct user *myPtr, *nextUser;
+	struct session *ptr = (struct session *)malloc(sizeof(struct session));
+	struct session *nextSession = (struct session *)malloc(sizeof(struct session));
+	struct user *myPtr = (struct user *)malloc(sizeof(struct user));
+	struct user *nextUser = (struct user *)malloc(sizeof(struct user));
 	int numbytes;
-	
+
+	ptr = head;
 	printf("beginning sending to peers \n");
 
 	//if we found the session
