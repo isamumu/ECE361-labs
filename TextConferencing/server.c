@@ -240,16 +240,17 @@ void message_handler(int sockfd, char *msgRecv) {
         //trcpy(respMsg->data, "hello there");
         //respMsg->size = strlen(respMsg->data);
 
-        strncpy(respMsg->source, "", MAX_DATA);
-
+        char* data = "";
         struct user *ptr = user_list->next;
         while (ptr != NULL) {
-            strcat(respMsg->source, ptr->name);
-            strcat(respMsg->source, "->");
-            strcat(respMsg->source, ptr->sessionID);
-            strcat(respMsg->source, "\n");
+            strcat(data, ptr->name);
+            strcat(data, "->");
+            strcat(data, ptr->sessionID);
+            strcat(data, "\n");
             ptr = ptr->next;
         }
+
+        strcpy(respMsg->source, data);
         printf("source: %s\n", respMsg->source);
     
         /*for(int i = 0; i < session_list->session_cnt; i++){
