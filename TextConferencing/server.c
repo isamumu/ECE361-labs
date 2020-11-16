@@ -147,15 +147,18 @@ void message_handler(int sockfd, char *msgRecv) {
 	}
 	if (this_user->sessionID != NULL) {
             struct session *session_found = findSession(session_list, this_user->sessionID);
+	    printf("session name: %s\n", this_user->sessionID);
 	    if (session_found == NULL) {
 	    	return;
 	    }
-	    this_user->sessionID = NULL;
+	    //this_user->sessionID = NULL;
 	    removeUser(session_found->users, this_user);
-            if (session_found->users->user_cnt == 0) {
-               	removeSession(session_list, newMsg->data);
+            if (session_found->users->user_cnt == -1) {
+		printf("session name: %s\n", this_user->sessionID);
+               	removeSession(session_list, this_user->sessionID);
             }
 	}
+	this_user->sessionID = NULL;
 	printSessions(session_list);
 	printUsers(user_list);
     } 
@@ -181,12 +184,13 @@ void message_handler(int sockfd, char *msgRecv) {
     	myuser->sockfd = this_user->sockfd;
     	myuser->user_cnt = -1;
     	myuser->next = NULL;
-	dummy->user_cnt = 1;
+	dummy->user_cnt = 0;
 	dummy->sessionID = NULL;
         dummy->sockfd = -1;
-    	dummy->next = myuser;
+    	//dummy->next = myuser;
         newSession->sessionName = newMsg->source;
         newSession->users = dummy;
+	addUser(newSession->users, myuser);
         //newSession->users->user_cnt = 1;
         newSession->next = NULL;
         if (this_user->sessionID == NULL) {
