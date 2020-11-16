@@ -240,7 +240,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //trcpy(respMsg->data, "hello there");
         //respMsg->size = strlen(respMsg->data);
         
-        char thing[DATA_SIZE] = " ";
+        char data[MAX_DATA] = " ";
         ptr = user_list->next;
         while (ptr != NULL) {
             printf("LOOK");
