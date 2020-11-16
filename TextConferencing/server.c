@@ -49,7 +49,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //bool match = false;
         
         //TODO: match and find user and password from list
-	bool match = true;
+
         //check for user name and password
         //send back ACK and NACK accordingly
         if(findUser(accounts, id, password)){
@@ -191,6 +191,7 @@ int main(int argc, char *argv[]){
     // initialize users
     struct account *user1 = (struct account *)malloc(sizeof(struct account));
     struct account *user2 = (struct account *)malloc(sizeof(struct account));
+
     user1->id = isamu;
     user1->password = ECE2T1;
     user1->next = user2;
@@ -237,6 +238,7 @@ int main(int argc, char *argv[]){
     if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
         perror("server: socket");
     }
+
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
     if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {

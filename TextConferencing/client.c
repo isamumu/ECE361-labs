@@ -61,6 +61,8 @@ void login(char *cmd, int sockfd, char *inaddr){
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM; // TCP socket type
+        hints.ai_protocol = IPPROTO_TCP;
+        hints.ai_flags = AI_PASSIVE; // use my I
 
         // find the IP at the specified port (FIND THE SERVER)
         if ((dummy = getaddrinfo(inaddr, port, &hints, &servinfo)) != 0) {
@@ -338,7 +340,7 @@ int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
-    
+
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
         

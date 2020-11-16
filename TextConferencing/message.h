@@ -37,7 +37,7 @@ struct user {
 };
 
 struct account {
-	char username[MAX_NAME];
+	char id[MAX_NAME];
 	char password[MAX_NAME];
 	struct account *next;
 
