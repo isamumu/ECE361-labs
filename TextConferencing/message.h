@@ -1,5 +1,5 @@
 #define MAX_NAME 1100
-#define MAX_DATA 1100
+#define MAX_DATA 4096
 #define BUF_SIZE 1100
 #define SIZE 20
 
