@@ -41,7 +41,7 @@ struct account {
 	char password[MAX_NAME];
 	struct account *next;
 
-}
+};
 
 // for each session created
 struct session {
@@ -54,19 +54,19 @@ struct session {
 	struct session *next;// = NULL; // i think this is good practice?
 };
 
-bool findUser(struct account *head, char *username, char *password){
+bool findAcct(struct account *head, char *username, char *password){
 	struct account *ptr;
 	ptr = head;
 
-	if(ptr->next == NULL){
+	if(ptr == NULL){
 		return false;
 	} else{
-		while(ptr.next != NULL){
-			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username)){
+		while(ptr != NULL){
+			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->username, username) == 0){
 				return true;
 			} else{
-				struct account *temp = ptr->next;
-				ptr = temp;
+				//struct account *temp = ptr->next;
+				ptr = ptr->next;
 			}
 		}
 	}
@@ -320,31 +320,47 @@ void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
 	memcpy(packetString + strptr, myPacket->data, myPacket->size);
+	packetString[strlen(packetString)] = 0;
+	printf("message: %s\n", packetString);
 	
 	
 }
 
 void print_message(struct message * myPacket) {
-	printf("total_frag: %d\n", myPacket->type);
-	printf("frag_no: %d\n", myPacket->size);
-	printf("size: %d\n", myPacket->source);
-	printf("filename: %s\n", myPacket->data);
+	printf("type: %d\n", myPacket->type);
+	printf("size: %d\n", myPacket->size);
+	printf("source: %s\n", myPacket->source);
+	printf("data: %s\n", myPacket->data);
 }
 
 // string to packet
 struct message *formatString(char * buf) {
+	if (strlen(buf) == 3) {
+		printf("i'm here\n");
+		return NULL;
+	}
 	struct message *packet_rcv = malloc(sizeof(struct message));
 	char * myString[5];
 	int i = 0;
 	myString[0] = strtok(buf, ":");
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
-	//myString[3] = strtok(NULL, ":");
-	packet_rcv->type = atoi(myString[0]);
-	packet_rcv->size = atoi(myString[1]);
-        strcpy(packet_rcv->source, myString[2]);
-	int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
-	memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
+	myString[3] = strtok(NULL, "\0");
+	if (myString[0] != NULL) {
+	    packet_rcv->type = atoi(myString[0]);
+	}
+	if (myString[1] != NULL) {
+	    packet_rcv->size = atoi(myString[1]);
+	}
+	if (myString[2] != NULL) {
+            strcpy(packet_rcv->source, myString[2]);
+	}
+	if (myString[3] != NULL) {
+	    strcpy(packet_rcv->data, myString[3]);
+	}
+	//int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
+	//memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
+	//printf("data: %s\n", packet_rcv->data);
 	print_message(packet_rcv);
 	return packet_rcv;
 }

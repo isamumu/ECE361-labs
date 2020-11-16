@@ -28,7 +28,7 @@ void *get_in_addr(struct sockaddr *sock_arr) {
 }
 
 
-void login(char *cmd, int sockfd, char *inaddr){
+void login(char *cmd, int sockfd){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
@@ -37,15 +37,19 @@ void login(char *cmd, int sockfd, char *inaddr){
     // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
+	printf("%s\n", id);
 
 	cmd = strtok(NULL, " ");
 	password = cmd;
+	printf("%s\n", password);
 
 	cmd = strtok(NULL, " ");
 	ip = cmd;
+	printf("%s\n", ip);
 
 	cmd = strtok(NULL, " \n");
 	port = cmd;
+	printf("%s\n", port);
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
@@ -61,11 +65,12 @@ void login(char *cmd, int sockfd, char *inaddr){
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM; // TCP socket type
-        hints.ai_protocol = IPPROTO_TCP;
-        hints.ai_flags = AI_PASSIVE; // use my I
+
+	    hints.ai_protocol = IPPROTO_TCP;
+    	hints.ai_flags = AI_PASSIVE; // use my I
 
         // find the IP at the specified port (FIND THE SERVER)
-        if ((dummy = getaddrinfo(inaddr, port, &hints, &servinfo)) != 0) {
+        if ((dummy = getaddrinfo(ip, port, &hints, &servinfo)) != 0) {
             perror("bad retrieval");
             return;
         }
@@ -74,7 +79,7 @@ void login(char *cmd, int sockfd, char *inaddr){
         // get socket from server port
         for(p = servinfo; p != NULL; p = p->ai_next) {
             if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                p->ai_protocol)) == -1) {
+                servinfo->ai_protocol)) == -1) {
                 perror("client: socket\n");
                 continue;
             }
@@ -101,13 +106,14 @@ void login(char *cmd, int sockfd, char *inaddr){
         freeaddrinfo(servinfo); // all done with this structure
 
         int numbytes;
-        struct message *msg;
+        struct message *msg = (struct message *)malloc(sizeof(struct message));
 
         msg->type = LOGIN;
         strncpy(msg->source, id, MAX_NAME);
         strncpy(msg->data, password, MAX_DATA);
         msg->size = strlen(msg->data);
         
+	memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
 	printf("login message formed:\n");
 	print_message(msg);
@@ -127,12 +133,13 @@ void login(char *cmd, int sockfd, char *inaddr){
             return;
         }
         
+	
         buff[numbytes] = 0;
         msg = formatString(buff);
-    
 
         if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
+	    return;
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
@@ -363,7 +370,7 @@ int main(int argc, char **argv){
         if (strcmp(cmd, "/login") == 0) {
             // log into the server at a given address and port
             // the IP address is specified in string dot format
-			login(cmd, sockfd, argv[1]);
+			login(cmd, sockfd);
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
