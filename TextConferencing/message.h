@@ -298,6 +298,8 @@ void sendToPeers(struct session *head, struct user *myUser, char *message, int s
 	struct session *nextSession;
 	struct user *myPtr, *nextUser;
 	int numbytes;
+	
+	printf("beginning sending to peers \n");
 
 	//if we found the session
 	if(strcmp(myUser->sessionID, ptr->next->sessionName) == 0){
