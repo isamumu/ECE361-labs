@@ -62,7 +62,7 @@ bool findAcct(struct account *head, char *username, char *password){
 		return false;
 	} else{
 		while(ptr != NULL){
-			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->username, username) == 0){
+			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->id, username) == 0){
 				return true;
 			} else{
 				//struct account *temp = ptr->next;
