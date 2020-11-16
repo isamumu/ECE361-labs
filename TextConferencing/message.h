@@ -211,6 +211,35 @@ void removeUser(struct user *head, struct user *myUser) {
 	return;
 }
 
+void removeUser_fd(struct user *head, int fd) {
+	if (head == NULL) {
+		printf("removeUser: head is null\n");
+		return;
+	}
+	head->user_cnt -= 1;
+	struct user *ptr = head;
+	if (ptr->sockfd == fd) {
+		head->next->user_cnt = head->user_cnt;
+		head = head->next;
+		free(ptr);
+		return;
+	}
+
+	struct user *pptr = head->next;
+	while (pptr != NULL) {
+		if (pptr->sockfd == fd) {
+			ptr->next = pptr->next;
+			pptr->next = NULL;
+			free(pptr);
+			return;
+		}
+		pptr = pptr->next;
+		ptr = ptr->next;
+	}
+	printf("removeUser: user not found / not logged in\n");
+	return;
+}
+
 void printUser(struct user *curr) {
 	if (curr == NULL) {
 		printf("NULL\n");

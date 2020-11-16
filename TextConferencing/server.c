@@ -34,7 +34,7 @@ struct user *user_list = NULL; //list for every users currently logged in
 //struct account *user2;
 struct account *accounts = NULL;
 
-void message_handler(int sockfd, char *msgRecv) {
+void message_handler(int sockfd, char *msgRecv, int *exited) {
     struct message *newMsg = (struct message *)malloc(sizeof(struct message)); 
     struct message *respMsg = (struct message *)malloc(sizeof(struct message));
     newMsg = formatString(msgRecv);
@@ -93,6 +93,18 @@ void message_handler(int sockfd, char *msgRecv) {
     }
     else if (newMsg->type == EXIT) {
         printf("Exit recieved\n");
+	removeUser_fd(user_list, sockfd);
+	struct session *ptr = session_list->next;
+	while (ptr != NULL) {
+	    struct user *uptr = ptr->users;
+	    while (uptr != NULL) {
+		removeUser_fd(uptr, sockfd);
+	    }
+	    ptr = ptr->next;
+	}
+	//close(sockfd);
+	*exited = 1;
+	printf("socket %d exitted\n", sockfd);
             //exit the server
             //get rid of sockfd
     }
@@ -364,6 +376,7 @@ int main(int argc, char *argv[]){
     int fdmax;
     int connection, other_connection;
     bool quit = false;
+    int exited = 0;
 
     int yes = 1;
     list_init();
@@ -455,8 +468,13 @@ int main(int argc, char *argv[]){
                         break;
                     }
                     else {
-			            //printf("going through message_handler: %s\n", buffer);
-                        message_handler(connection, buffer);
+			                  printf("going through message_handler: %s\n", buffer);
+                        message_handler(connection, buffer, &exited);
+			                  if (exited == 1) {
+			                      close(connection);
+			                      FD_CLR(connection, &master);
+			                      exited = 0;
+			                  }
                     }
                 }
             }
