@@ -243,6 +243,7 @@ void message_handler(int sockfd, char *msgRecv) {
         char* data = "";
         struct user *ptr = user_list->next;
         while (ptr != NULL) {
+            printf("LOOK");
             strcat(data, ptr->name);
             printf("data1: %s\n", data);
             strcat(data, "->");
