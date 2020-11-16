@@ -370,6 +370,7 @@ int main(int argc, char *argv[]){
     printf("one moment please.....\n");
 
     while(1) {
+        printf("looping.");
         memset(buffer, 0, BUF_SIZE);
         read_fds = master;
         if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1 ) {
