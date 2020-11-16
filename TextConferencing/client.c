@@ -65,7 +65,8 @@ int login(char *cmd, int sockfd){
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM; // TCP socket type
-	hints.ai_protocol = IPPROTO_TCP;
+
+	    hints.ai_protocol = IPPROTO_TCP;
     	hints.ai_flags = AI_PASSIVE; // use my I
 
         // find the IP at the specified port (FIND THE SERVER)
@@ -112,10 +113,10 @@ int login(char *cmd, int sockfd){
         strncpy(msg->data, password, MAX_DATA);
         msg->size = strlen(msg->data);
         
-	memset(buff, 0, BUF_SIZE);
+	    memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
-	printf("login message formed:\n");
-	print_message(msg);
+        printf("login message formed:\n");
+        //print_message(msg);
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
 			close(sockfd);
@@ -198,7 +199,7 @@ void joinsession(char *session, int sockfd) {
         newMessage->type = JOIN;
         newMessage->size = strlen(session);
         strncpy(newMessage->data, session, MAX_DATA);
-	//strncpy(newMessage->source, "\0", MAX_NAME);
+	
         int bytes;
 
         formatMessage(newMessage, buff);
@@ -234,7 +235,7 @@ void leavesession(int sockfd) {
         struct message newMessage;
         newMessage.type = LEAVE_SESS;
         newMessage.size = 0;
-        //strcpy(newMessage.data, session, MAX_DATA);
+
         int bytes;
 
         formatMessage(&newMessage, buff);
@@ -261,8 +262,7 @@ void createsession(char *session, int sockfd) {
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = NEW_SESS;
         newMessage->size = strlen(session);
-	//newMessage->data = NULL;
-	//newMessage->source = NULL;
+        
         strncpy(newMessage->data, session, MAX_DATA);
         int bytes;
 
@@ -279,7 +279,7 @@ void createsession(char *session, int sockfd) {
 
         buff[bytes] = 0; // mark end of the string
         newMessage = formatString(buff);
-
+        
         if (newMessage->type == NS_ACK) {
             printf("Successfully created and joined session %s.\n", newMessage->data);
             joined = true;
@@ -310,10 +310,12 @@ void list(int sockfd) {
 		}
 
         buff[bytes] = 0; // mark end of the string
+        //printf("the buffer %s: \n", buff);
         newMessage = formatString(buff);
 
         if (newMessage->type == QU_ACK) {
-            fprintf(stdout, "User id\t\tSession ids\n%s", newMessage->data);
+            //printf(newMessage->data);
+            fprintf(stdout, "User id & Session ids\n%s", newMessage->source);
         }
 
         return;
@@ -341,17 +343,14 @@ void sendMsg(int sockfd){
         fprintf(stderr, "send error\n");
         return;
     }
-
-    
 }
-
 
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
-    
+
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
         
@@ -412,5 +411,4 @@ int main(int argc, char **argv){
 
     fprintf(stdout, "text conference done.\n");
     return 0;
-    
 }

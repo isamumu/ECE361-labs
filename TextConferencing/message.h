@@ -37,7 +37,7 @@ struct user {
 };
 
 struct account {
-	char username[MAX_NAME];
+	char id[MAX_NAME];
 	char password[MAX_NAME];
 	struct account *next;
 
@@ -62,7 +62,7 @@ bool findAcct(struct account *head, char *username, char *password){
 		return false;
 	} else{
 		while(ptr != NULL){
-			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->username, username) == 0){
+			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->id, username) == 0){
 				return true;
 			} else{
 				//struct account *temp = ptr->next;
@@ -325,9 +325,11 @@ void initSession(struct session *sessions, char *sessionID, struct user *newUser
 void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
+	//printf("THE DATA %s", myPacket->data);
 	memcpy(packetString + strptr, myPacket->data, myPacket->size);
+
 	packetString[strlen(packetString)] = 0;
-	printf("message: %s\n", packetString);
+	//printf("message: %s\n", packetString);
 	
 	
 }
@@ -352,6 +354,7 @@ struct message *formatString(char * buf) {
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
 	myString[3] = strtok(NULL, "\0");
+
 	if (myString[0] != NULL) {
 	    packet_rcv->type = atoi(myString[0]);
 	}
@@ -359,7 +362,7 @@ struct message *formatString(char * buf) {
 	    packet_rcv->size = atoi(myString[1]);
 	}
 	if (myString[2] != NULL) {
-            strcpy(packet_rcv->source, myString[2]);
+        strcpy(packet_rcv->source, myString[2]);
 	}
 	if (myString[3] != NULL) {
 	    strcpy(packet_rcv->data, myString[3]);
@@ -367,7 +370,7 @@ struct message *formatString(char * buf) {
 	//int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
 	//memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
 	//printf("data: %s\n", packet_rcv->data);
-	print_message(packet_rcv);
+	//print_message(packet_rcv);
 	return packet_rcv;
 }
  
