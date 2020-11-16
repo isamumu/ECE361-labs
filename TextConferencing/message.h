@@ -355,7 +355,7 @@ struct message *formatString(char * buf) {
 	printf("type: ", myString[0]);
 	printf("size: ", myString[1]);
 	printf("source: ", myString[2]);
-	printf("data: ", myString[3])
+	printf("data: ", myString[3]);
 	if (myString[0] != NULL) {
 	    packet_rcv->type = atoi(myString[0]);
 	}
