@@ -228,6 +228,19 @@ void message_handler(int sockfd, char *msgRecv) {
         //check the session that the sender is in
         //send the message to everyone (every sockfd) in the sockfdlist of that session
 	    printf("MESSAGE recieved\n");
+        struct user *ptr, *myUser;
+
+        ptr = user_list->next;
+
+        while(ptr != NULL){
+            if(ptr->sockfd == sockfd){
+                myUser = ptr;
+                break;
+            }
+            ptr = ptr->next;
+        }
+        sendToPeers(session_list, myUser , newMsg->data, sockfd);
+
     }
 
     else { // newMsg.type == QUERY
