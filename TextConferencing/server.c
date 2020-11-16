@@ -236,7 +236,9 @@ void message_handler(int sockfd, char *msgRecv) {
         struct session *ptr;
         ptr = session_list->next;
         strcpy(respMsg->data,"HI");
+        respMsg->size = strlen(respMsg->data);
 
+        /*
         for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->data, ptr->sessionName);
             strcat(respMsg->data, ": \n");
@@ -251,7 +253,8 @@ void message_handler(int sockfd, char *msgRecv) {
             ptr = ptr->next;
 
         }
-        printf("the message %s", respMsg->data);
+        */
+        
 
         formatMessage(respMsg, buff);
 
