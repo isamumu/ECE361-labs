@@ -241,7 +241,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //respMsg->size = strlen(respMsg->data);
 
         char* data = "";
-        struct user *ptr = user_list->next;
+        ptr = user_list->next;
         while (ptr != NULL) {
             printf("LOOK");
             strcat(data, ptr->name);
