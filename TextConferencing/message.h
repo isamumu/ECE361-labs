@@ -61,8 +61,8 @@ bool findAcct(struct account *head, char *username, char *password){
 	if(ptr == NULL){
 		return false;
 	} else{
-		while(ptr->next != NULL){
-			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username) == 0){
+		while(ptr != NULL){
+			if(strcmp(ptr->password, password) == 0 && strcmp(ptr->username, username) == 0){
 				return true;
 			} else{
 				//struct account *temp = ptr->next;
@@ -335,6 +335,10 @@ void print_message(struct message * myPacket) {
 
 // string to packet
 struct message *formatString(char * buf) {
+	if (strlen(buf) == 3) {
+		printf("i'm here\n");
+		return NULL;
+	}
 	struct message *packet_rcv = malloc(sizeof(struct message));
 	char * myString[5];
 	int i = 0;
@@ -342,8 +346,12 @@ struct message *formatString(char * buf) {
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
 	myString[3] = strtok(NULL, "\0");
-	packet_rcv->type = atoi(myString[0]);
-	packet_rcv->size = atoi(myString[1]);
+	if (myString[0] != NULL) {
+	    packet_rcv->type = atoi(myString[0]);
+	}
+	if (myString[1] != NULL) {
+	    packet_rcv->size = atoi(myString[1]);
+	}
 	if (myString[2] != NULL) {
             strcpy(packet_rcv->source, myString[2]);
 	}

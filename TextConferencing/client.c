@@ -138,6 +138,7 @@ void login(char *cmd, int sockfd){
 
         if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
+	    return;
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
