@@ -244,12 +244,15 @@ void message_handler(int sockfd, char *msgRecv) {
         struct user *ptr = user_list->next;
         while (ptr != NULL) {
             strcat(data, ptr->name);
+            printf("data1: %s\n", data);
             strcat(data, "->");
+            printf("data2: %s\n", data);
             strcat(data, ptr->sessionID);
+            printf("data3: %s\n", data);
             strcat(data, "\n");
             ptr = ptr->next;
         }
-        printf("data: ", data);
+        printf("data: %s", data);
         strncpy(respMsg->source, data, MAX_DATA);
         printf("source: %s\n", respMsg->source);
     
