@@ -84,7 +84,7 @@ void message_handler(int sockfd, char *msgRecv) {
             close(sockfd);
             return;
         }
-        d
+        
         printUsers(user_list);
         free(respMsg);
         free(newMsg);
@@ -289,11 +289,11 @@ int main(int argc, char *argv[]){
     // initialize users
     struct account *user1 = (struct account *)malloc(sizeof(struct account));
     struct account *user2 = (struct account *)malloc(sizeof(struct account));
-    strcpy(user1->name, "isamu");
+    strcpy(user1->id, "isamu");
     strcpy(user1->password, "ECE2T1");
     user1->next = user2;
 
-    strcpy(user2->name, "hannah");
+    strcpy(user2->id, "hannah");
     strcpy(user2->password, "ECE2T2");
     user2->next = NULL;
     accounts = user1;
