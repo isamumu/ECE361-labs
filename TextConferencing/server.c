@@ -235,23 +235,31 @@ void message_handler(int sockfd, char *msgRecv) {
         //send back ACK
 	    printf("QUERY recieved\n");
         respMsg->type = QU_ACK;
-        //struct session *ptr = (struct session *)malloc(sizeof(struct session));
+        struct user *ptr = (struct user *)malloc(sizeof(struct user));
         //ptr = session_list->next;
         //trcpy(respMsg->data, "hello there");
         //respMsg->size = strlen(respMsg->data);
-
-        char* data = "";
-        struct user *ptr = user_list->next;
+        /*
+        char* thing = "";
+        ptr = user_list->next;
         while (ptr != NULL) {
+            printf("LOOK");
             strcat(data, ptr->name);
+            printf("data1: %s\n", data);
             strcat(data, "->");
+            printf("data2: %s\n", data);
             strcat(data, ptr->sessionID);
+            printf("data3: %s\n", data);
             strcat(data, "\n");
             ptr = ptr->next;
         }
-
-        strcpy(respMsg->source, data);
+        
+        printf("data: %s", data);
+        strncpy(respMsg->source, data, MAX_DATA);
         printf("source: %s\n", respMsg->source);
+        */
+
+
     
         /*for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->source, ptr->sessionName);
