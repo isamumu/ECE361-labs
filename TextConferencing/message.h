@@ -105,7 +105,7 @@ void addUser(struct user *head, struct user *myUser) {
 
 	ptr->next = myUser;
 	myUser->next = NULL;
-	head->user_cnt += 1;
+	head->user_cnt = head->user_cnt + 1;// += 1;
 
 
 	return;
@@ -150,17 +150,17 @@ void removeSession(struct session *head, char *sessName) {
 		return;
 	}
 
-	struct session *ptr = head;
+	struct session *ptr = head->next;
 	// if the session of interest is the head
-	if (strcmp(ptr->sessionName, sessName) == 0) {
+	/*if (strcmp(ptr->sessionName, sessName) == 0) {
 		head->session_cnt -= 1;
 		head->next->session_cnt = head->session_cnt;
 		head = head->next;
 		free(ptr);
 		return;
-	}
+	}*/
 
-	struct session *pptr = head->next;
+	struct session *pptr = ptr->next;
 	while (pptr != NULL) {
 		if (strcmp(pptr->sessionName, sessName) == 0) {
 			ptr->next = pptr->next;
@@ -170,6 +170,12 @@ void removeSession(struct session *head, char *sessName) {
 		}
 		pptr = pptr->next;
 		ptr = ptr->next;
+	}
+	if (strcmp(ptr->sessionName, sessName) == 0) {
+		head->session_cnt = 0;
+		head->next = NULL;
+		free(ptr);
+		return;
 	}
 	printf("removeSession: session not found\n");
 	return;
@@ -214,6 +220,7 @@ void printUser(struct user *curr) {
 	printf("password: %s\n", curr->password); //for debug
 	printf("sessionID: %s\n", curr->sessionID); //for debug
 	printf("socket: %d\n", curr->sockfd); //for debug
+	printf("user count: %d\n", curr->user_cnt);
 }
 
 void printUsers(struct user *head) {
@@ -236,8 +243,7 @@ void printSess(struct session *curr) {
 	}
 	printf("session ID: %s\n", curr->sessionName);
 	printf("session count %d\n", curr->session_cnt);
-	printf("contianed Users\n");
-	printf("---------------------\n");
+	printf("--------contianed Users----------\n");
 	printUsers(curr->users);
 }
 

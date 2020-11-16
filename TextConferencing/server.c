@@ -146,24 +146,27 @@ void message_handler(int sockfd, char *msgRecv) {
         //delete the session from the session list
         //send back ACK and NACK
         //if every user leaves the linked list, then we change the name of session back to NULL
-        printf("LEAVE_SESS recieved\n");
-            struct user *this_user = findUser(user_list, sockfd);
-        if (this_user == NULL) {
-        return;
-        }
-        if (this_user->sessionID != NULL) {
-                struct session *session_found = findSession(session_list, this_user->sessionID);
-            if (session_found == NULL) {
-                return;
+	printf("LEAVE_SESS recieved\n");
+        struct user *this_user = findUser(user_list, sockfd);
+	if (this_user == NULL) {
+	   return;
+	}
+	if (this_user->sessionID != NULL) {
+            struct session *session_found = findSession(session_list, this_user->sessionID);
+	    printf("session name: %s\n", this_user->sessionID);
+	    if (session_found == NULL) {
+	    	return;
+	    }
+	    //this_user->sessionID = NULL;
+	    removeUser(session_found->users, this_user);
+            if (session_found->users->user_cnt == -1) {
+		printf("session name: %s\n", this_user->sessionID);
+               	removeSession(session_list, this_user->sessionID);
             }
-            this_user->sessionID = NULL;
-            removeUser(session_found->users, this_user);
-                if (session_found->users->user_cnt == 0) {
-                    removeSession(session_list, newMsg->data);
-                }
-        }
-        printSessions(session_list);
-        printUsers(user_list);
+	}
+	this_user->sessionID = NULL;
+	printSessions(session_list);
+	printUsers(user_list);
     } 
     else if (newMsg->type == NEW_SESS) {
         //check if max seesion number has reached
@@ -182,23 +185,20 @@ void message_handler(int sockfd, char *msgRecv) {
         }
 
         struct session *newSession = (struct session *)malloc(sizeof(struct session));
-        struct user *dummy = (struct user *)malloc(sizeof(struct user));
-        struct user *myuser = (struct user *)malloc(sizeof(struct user));
-
-        strncpy(myuser->name, this_user->name, MAX_NAME);
-        strncpy(myuser->password, this_user->password, MAX_NAME);
-
-        myuser->sockfd = this_user->sockfd;
-        myuser->user_cnt = -1;
-        myuser->next = NULL;
-
-        dummy->user_cnt = 1;
-        dummy->sessionID = NULL;
+	struct user *dummy = (struct user *)malloc(sizeof(struct user));
+	struct user *myuser = (struct user *)malloc(sizeof(struct user));
+	strncpy(myuser->name, this_user->name, MAX_NAME);
+	strncpy(myuser->password, this_user->password, MAX_NAME);
+    	myuser->sockfd = this_user->sockfd;
+    	myuser->user_cnt = -1;
+    	myuser->next = NULL;
+	dummy->user_cnt = 0;
+	dummy->sessionID = NULL;
         dummy->sockfd = -1;
-        dummy->next = myuser;
-
+    	//dummy->next = myuser;
         newSession->sessionName = newMsg->source;
         newSession->users = dummy;
+	addUser(newSession->users, myuser);
         //newSession->users->user_cnt = 1;
         newSession->next = NULL;
 
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]){
 
 	break;
     }
-    
+
     //finished with finding the IP address
     freeaddrinfo(servinfo);
 
