@@ -250,7 +250,7 @@ void message_handler(int sockfd, char *msgRecv) {
             strcat(respMsg->source, "\n");
             ptr = ptr->next;
         }
-        //printf("source: %s\n", respMsg->source);
+        printf("source: %s\n", respMsg->source);
     
         /*for(int i = 0; i < session_list->session_cnt; i++){
             strcat(respMsg->source, ptr->sessionName);
