@@ -352,6 +352,10 @@ struct message *formatString(char * buf) {
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
 	myString[3] = strtok(NULL, "\0");
+	printf("type: ", myString[0]);
+	printf("size: ", myString[1]);
+	printf("source: ", myString[2]);
+	printf("data: ", myString[3])
 	if (myString[0] != NULL) {
 	    packet_rcv->type = atoi(myString[0]);
 	}
@@ -359,7 +363,7 @@ struct message *formatString(char * buf) {
 	    packet_rcv->size = atoi(myString[1]);
 	}
 	if (myString[2] != NULL) {
-            strcpy(packet_rcv->source, myString[2]);
+        strcpy(packet_rcv->source, myString[2]);
 	}
 	if (myString[3] != NULL) {
 	    strcpy(packet_rcv->data, myString[3]);
