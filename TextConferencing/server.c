@@ -258,7 +258,10 @@ void message_handler(int sockfd, char *msgRecv) {
         char data[MAX_DATA] = " ";
         ptr = user_list->next;
         while (ptr != NULL) {
-            printf("LOOK");
+            if (ptr->sessionID == NULL) {
+		ptr = ptr->next;
+		continue;
+	    }
             strcat(data, ptr->name);
             printf("data1: %s\n", data);
             strcat(data, "->");
@@ -360,6 +363,7 @@ int main(int argc, char *argv[]){
     fd_set read_fds;
     int fdmax;
     int connection, other_connection;
+    bool quit = false;
 
     int yes = 1;
     list_init();
@@ -444,10 +448,12 @@ int main(int argc, char *argv[]){
                         close(connection);
                         FD_CLR(connection, &master);
                     }
-                    if (numbytes <= 3) {
+                    if (numbytes == 0) {
                         printf("ignore socket %d\n", connection);
-                        //close(connection);
-                        //FD_CLR(connection, &master);
+                        close(connection);
+			FD_CLR(connection, &master);
+			quit = true;
+			break;
                     }
                     else {
 			            printf("going through message_handler: %s\n", buffer);
@@ -456,5 +462,16 @@ int main(int argc, char *argv[]){
                 }
             }
         }
-    }
+	if (quit == true) {
+	    for (connection = 0; connection <= fdmax; connection++) {
+	        if (FD_ISSET(connection, &master)) {
+	            printf("ignore socket %d\n", connection);
+                    close(connection);
+	            FD_CLR(connection, &master);
+	        }
+            }
+            printf("server closed\n");
+            return 0;
+	}
+    }    
 }
