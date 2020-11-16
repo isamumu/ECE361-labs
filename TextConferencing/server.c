@@ -239,8 +239,8 @@ void message_handler(int sockfd, char *msgRecv) {
         //ptr = session_list->next;
         //trcpy(respMsg->data, "hello there");
         //respMsg->size = strlen(respMsg->data);
-        /*
-        char* thing = "";
+        
+        char thing[DATA_SIZE] = " ";
         ptr = user_list->next;
         while (ptr != NULL) {
             printf("LOOK");
@@ -257,7 +257,7 @@ void message_handler(int sockfd, char *msgRecv) {
         printf("data: %s", data);
         strncpy(respMsg->source, data, MAX_DATA);
         printf("source: %s\n", respMsg->source);
-        */
+        
 
 
     
