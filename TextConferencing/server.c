@@ -409,7 +409,7 @@ int main(int argc, char *argv[]){
                         //FD_CLR(connection, &master);
                     }
                     else {
-			            printf("going through message_handler\n");
+			            printf("going through message_handler: %s\n", buffer);
                         message_handler(connection, buffer);
                     }
                 }
