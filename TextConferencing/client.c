@@ -19,6 +19,8 @@
 bool joined = false;
 char buff[MAXBUFLEN];
 
+int serversock;
+
 //This fcn is used in the inet_ntop() for the login fcn as well
 void *get_in_addr(struct sockaddr *sock_arr) {
     if (sock_arr->sa_family == AF_INET) {
@@ -366,10 +368,20 @@ int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
+    int bytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
 
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
-        
+        if(sockfd != INVALID_SOCKET){
+            if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+                fprintf(stderr, "ERROR: nothing received\n");
+                return 0 ;
+            }
+            msg = formatString(buff);
+            printf("message recieved: %s", msg->data);
+        }
+
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
         buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0

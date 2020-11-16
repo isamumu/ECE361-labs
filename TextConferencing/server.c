@@ -240,7 +240,7 @@ void message_handler(int sockfd, char *msgRecv, int *exited) {
         //check the session that the sender is in
         //send the message to everyone (every sockfd) in the sockfdlist of that session
 	    printf("MESSAGE recieved\n");
-        struct user *ptr;
+        struct user *ptr = (struct user *)malloc(sizeof(struct user));
         struct user *myUser = (struct user *)malloc(sizeof(struct user));
         printf("MESSAGE 123recieved\n");
         ptr = user_list->next;
