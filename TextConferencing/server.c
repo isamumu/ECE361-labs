@@ -228,7 +228,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //check the session that the sender is in
         //send the message to everyone (every sockfd) in the sockfdlist of that session
 	    printf("MESSAGE recieved\n");
-        struct user *ptr = (struct user *)malloc(sizeof(struct user));
+        struct user *ptr;
         struct user *myUser = (struct user *)malloc(sizeof(struct user));
         printf("MESSAGE 123recieved\n");
         ptr = user_list->next;
@@ -414,7 +414,6 @@ int main(int argc, char *argv[]){
     printf("one moment please.....\n");
 
     while(1) {
-        printf("looping.");
         memset(buffer, 0, BUF_SIZE);
         read_fds = master;
         if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1 ) {
@@ -424,7 +423,7 @@ int main(int argc, char *argv[]){
 
         for (connection = 0; connection <= fdmax; connection++) {
 	        
-            printf("connection: %d\n", connection);
+            //printf("connection: %d\n", connection);
             if (FD_ISSET(connection, &read_fds)) {
                 if (connection == sockfd) {
                     //new connection recieved
@@ -442,7 +441,7 @@ int main(int argc, char *argv[]){
 
                 }
                 else {
-		            printf("message recieved from socket %d\n", connection);
+		            //printf("message recieved from socket %d\n", connection);
                     if ((numbytes = recv(connection, buffer, BUF_SIZE, 0)) == -1) {
                         perror("ERROR: recv");
                         close(connection);
@@ -451,12 +450,12 @@ int main(int argc, char *argv[]){
                     if (numbytes == 0) {
                         printf("ignore socket %d\n", connection);
                         close(connection);
-			FD_CLR(connection, &master);
-			quit = true;
-			break;
+                        FD_CLR(connection, &master);
+                        quit = true;
+                        break;
                     }
                     else {
-			            printf("going through message_handler: %s\n", buffer);
+			            //printf("going through message_handler: %s\n", buffer);
                         message_handler(connection, buffer);
                     }
                 }
