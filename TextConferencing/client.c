@@ -219,7 +219,7 @@ void joinsession(char *session, int sockfd) {
         newMessage = formatString(buff);
 
         if (newMessage->type == JN_ACK) {
-            fprintf(stdout, "Join Success... session ID: %s\n", newMessage->source);
+            fprintf(stdout, "Join Successful!");
             joined = true;
         } else if (newMessage->type == JN_NACK) {
             fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
