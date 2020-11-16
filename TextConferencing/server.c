@@ -189,8 +189,10 @@ void message_handler(int sockfd, char *msgRecv) {
         struct session *newSession = (struct session *)malloc(sizeof(struct session));
         struct user *dummy = (struct user *)malloc(sizeof(struct user));
         struct user *myuser = (struct user *)malloc(sizeof(struct user));
+
         strncpy(myuser->name, this_user->name, MAX_NAME);
         strncpy(myuser->password, this_user->password, MAX_NAME);
+
     	myuser->sockfd = this_user->sockfd;
     	myuser->user_cnt = -1;
     	myuser->next = NULL;
@@ -235,7 +237,7 @@ void message_handler(int sockfd, char *msgRecv) {
         respMsg->type = QU_ACK;
         struct session *ptr;
         ptr = session_list->next;
-        strcpy(respMsg->data,"HI");
+        strcpy(respMsg->source,"HI");
         respMsg->size = strlen(respMsg->data);
 
         /*

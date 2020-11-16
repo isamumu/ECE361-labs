@@ -279,7 +279,7 @@ void createsession(char *session, int sockfd) {
 
         buff[bytes] = 0; // mark end of the string
         newMessage = formatString(buff);
-
+        
         if (newMessage->type == NS_ACK) {
             printf("Successfully created and joined session %s.\n", newMessage->data);
             joined = true;
@@ -310,6 +310,7 @@ void list(int sockfd) {
 		}
 
         buff[bytes] = 0; // mark end of the string
+
         newMessage = formatString(buff);
 
         if (newMessage->type == QU_ACK) {
