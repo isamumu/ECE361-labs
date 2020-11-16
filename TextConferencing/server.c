@@ -248,6 +248,7 @@ void message_handler(int sockfd, char *msgRecv) {
             ptr = ptr->next;
 
         }
+        printf("the message %s", respMsg->data);
 
         formatMessage(respMsg, buff);
 
