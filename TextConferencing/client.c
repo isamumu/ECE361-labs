@@ -369,14 +369,17 @@ int main(int argc, char **argv){
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
     int bytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
 
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
         if(sockfd != INVALID_SOCKET){
             if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
                 fprintf(stderr, "ERROR: nothing received\n");
-                return;
+                return 0 ;
             }
+            msg = formatString(buff);
+            printf("message recieved: %s", msg->data);
         }
 
         fgets(buff, MAXBUFLEN - 1, stdin); 
