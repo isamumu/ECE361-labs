@@ -345,6 +345,20 @@ void sendMsg(int sockfd){
     }
 }
 
+void quit(int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+	printf("Please login to a server before trying to join a session\n");
+	return;
+    }
+    memset(buff, 0, BUF_SIZE);
+    int numbytes;
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    printf("program quitted\n");
+}
+
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
     char *cmd; // will store a line of strings separated by spaces   
@@ -398,7 +412,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
-			logout(sockfd);
+			quit(sockfd);
 			break;
 
 		} else{
