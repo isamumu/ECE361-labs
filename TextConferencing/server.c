@@ -249,7 +249,7 @@ void message_handler(int sockfd, char *msgRecv) {
             strcat(data, "\n");
             ptr = ptr->next;
         }
-        print("data: ", data);
+        printf("data: ", data);
         strncpy(respMsg->source, data, MAX_DATA);
         printf("source: %s\n", respMsg->source);
     
