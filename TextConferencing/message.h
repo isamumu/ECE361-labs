@@ -58,15 +58,15 @@ bool findAcct(struct account *head, char *username, char *password){
 	struct account *ptr;
 	ptr = head;
 
-	if(ptr->next == NULL){
+	if(ptr == NULL){
 		return false;
 	} else{
 		while(ptr->next != NULL){
-			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username)){
+			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username) == 0){
 				return true;
 			} else{
-				struct account *temp = ptr->next;
-				ptr = temp;
+				//struct account *temp = ptr->next;
+				ptr = ptr->next;
 			}
 		}
 	}
@@ -344,8 +344,12 @@ struct message *formatString(char * buf) {
 	myString[3] = strtok(NULL, "\0");
 	packet_rcv->type = atoi(myString[0]);
 	packet_rcv->size = atoi(myString[1]);
-        strcpy(packet_rcv->source, myString[2]);
-	strcpy(packet_rcv->data, myString[3]);
+	if (myString[2] != NULL) {
+            strcpy(packet_rcv->source, myString[2]);
+	}
+	if (myString[3] != NULL) {
+	    strcpy(packet_rcv->data, myString[3]);
+	}
 	//int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
 	//memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
 	//printf("data: %s\n", packet_rcv->data);
