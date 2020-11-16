@@ -48,6 +48,8 @@ void message_handler(int sockfd, char *msgRecv) {
     // TODO after creating linked list functions, implement 
     // Hannah: session functions (create join and leave)
     // Isamu: rest
+    print("the message type is: ", newMsg->type);
+    
     if (newMsg->type == LOGIN) {
         printf("login recieved\n");
 
