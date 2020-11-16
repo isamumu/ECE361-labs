@@ -41,7 +41,7 @@ struct account {
 	char password[MAX_NAME];
 	struct account *next;
 
-}
+};
 
 // for each session created
 struct session {
@@ -54,14 +54,14 @@ struct session {
 	struct session *next;// = NULL; // i think this is good practice?
 };
 
-bool findUser(struct account *head, char *username, char *password){
+bool findAcct(struct account *head, char *username, char *password){
 	struct account *ptr;
 	ptr = head;
 
 	if(ptr->next == NULL){
 		return false;
 	} else{
-		while(ptr.next != NULL){
+		while(ptr->next != NULL){
 			if(strcmp(ptr->next->password, password) == 0 && strcmp(ptr->next->username, username)){
 				return true;
 			} else{
@@ -325,10 +325,10 @@ void formatMessage(struct message * myPacket, char *packetString) {
 }
 
 void print_message(struct message * myPacket) {
-	printf("total_frag: %d\n", myPacket->type);
-	printf("frag_no: %d\n", myPacket->size);
-	printf("size: %d\n", myPacket->source);
-	printf("filename: %s\n", myPacket->data);
+	printf("type: %d\n", myPacket->type);
+	printf("size: %d\n", myPacket->size);
+	printf("source: %s\n", myPacket->source);
+	printf("data: %s\n", myPacket->data);
 }
 
 // string to packet
