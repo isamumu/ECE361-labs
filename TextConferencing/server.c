@@ -235,7 +235,7 @@ void message_handler(int sockfd, char *msgRecv) {
         //send back ACK
 	    printf("QUERY recieved\n");
         respMsg->type = QU_ACK;
-        //struct session *ptr = (struct session *)malloc(sizeof(struct session));
+        struct user *ptr = (struct user *)malloc(sizeof(struct user));
         //ptr = session_list->next;
         //trcpy(respMsg->data, "hello there");
         //respMsg->size = strlen(respMsg->data);
