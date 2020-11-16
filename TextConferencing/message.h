@@ -270,8 +270,9 @@ void sendToPeers(struct session *head, struct user *myUser, char *message, int s
 	struct user *myPtr, *nextUser;
 	int numbytes;
 
-	if(strcmp(myUser->sessionID, ptr->sessionName) == 0){
-		myPtr = ptr->users->next;
+	//if we found the session
+	if(strcmp(myUser->sessionID, ptr->next->sessionName) == 0){
+		myPtr = ptr->users->next; //locate the users list
 		
 		while (myPtr != NULL){
 			// send to each element of the list
