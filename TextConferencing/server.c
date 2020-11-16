@@ -257,7 +257,7 @@ void message_handler(int sockfd, char *msgRecv) {
         }
         */
         
-
+        memset(buff, 0, BUF_SIZE);
         formatMessage(respMsg, buff);
 
         if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
