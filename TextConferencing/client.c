@@ -108,12 +108,8 @@ void login(char *cmd, int sockfd){
         struct message *msg = (struct message *)malloc(sizeof(struct message));
 
         msg->type = LOGIN;
-	printf("mmmmm\n");
         strncpy(msg->source, id, MAX_NAME);
-	printf("id : %s\n", id);
-	printf("source %s\n", msg->source);
         strncpy(msg->data, password, MAX_DATA);
-	printf("data %s\n", msg->data);
         msg->size = strlen(msg->data);
         
 	memset(buff, 0, BUF_SIZE);
@@ -136,9 +132,9 @@ void login(char *cmd, int sockfd){
             return;
         }
         
+	
         buff[numbytes] = 0;
         msg = formatString(buff);
-    
 
         if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
