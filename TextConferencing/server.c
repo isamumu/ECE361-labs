@@ -40,8 +40,9 @@ void message_handler(int sockfd, char *msgRecv) {
     newMsg = formatString(msgRecv);
     char buff[BUF_SIZE];
     int numbytes;
+
     if (newMsg == NULL) {
-	return;
+	    return;
     }
 
     // TODO after creating linked list functions, implement 
@@ -58,7 +59,6 @@ void message_handler(int sockfd, char *msgRecv) {
         printf("i'm here\n");
             //bool match = false;
         struct user *newUser = (struct user *)malloc(sizeof(struct user));
-	
         
         //TODO: match and find user and password from list
 	    //bool match = true;
@@ -185,20 +185,20 @@ void message_handler(int sockfd, char *msgRecv) {
         }
 
         struct session *newSession = (struct session *)malloc(sizeof(struct session));
-	struct user *dummy = (struct user *)malloc(sizeof(struct user));
-	struct user *myuser = (struct user *)malloc(sizeof(struct user));
-	strncpy(myuser->name, this_user->name, MAX_NAME);
-	strncpy(myuser->password, this_user->password, MAX_NAME);
+        struct user *dummy = (struct user *)malloc(sizeof(struct user));
+        struct user *myuser = (struct user *)malloc(sizeof(struct user));
+        strncpy(myuser->name, this_user->name, MAX_NAME);
+        strncpy(myuser->password, this_user->password, MAX_NAME);
     	myuser->sockfd = this_user->sockfd;
     	myuser->user_cnt = -1;
     	myuser->next = NULL;
-	dummy->user_cnt = 0;
-	dummy->sessionID = NULL;
+        dummy->user_cnt = 0;
+        dummy->sessionID = NULL;
         dummy->sockfd = -1;
     	//dummy->next = myuser;
         newSession->sessionName = newMsg->source;
         newSession->users = dummy;
-	addUser(newSession->users, myuser);
+	    addUser(newSession->users, myuser);
         //newSession->users->user_cnt = 1;
         newSession->next = NULL;
 
@@ -231,6 +231,24 @@ void message_handler(int sockfd, char *msgRecv) {
         //send back ACK
 	    printf("QUERY recieved\n");
         respMsg->type = QU_ACK;
+        struct session *ptr;
+        ptr = session_list->next;
+
+        for(int i = 0; i < session_list->session_cnt; i++){
+            respMsg->data = strcat(respMsg->data, ptr->sessionName);
+            respMsg->data = strcat(respMsg->data, ": \n");
+            struct user *uptr = session_list->next->users;
+
+            for(int j = 0; j < uptr->user_cnt; j++){
+                respMsg->data = strcat(respMsg->data, uptr->name);
+                respMsg->data = strcat(respMsg->data, "\n");
+                uptr = uptr->next;
+            }
+
+            ptr = ptr->next;
+
+        }
+
         formatMessage(respMsg, buff);
 
         if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
@@ -311,18 +329,19 @@ int main(int argc, char *argv[]){
         perror("cannot get IP address");
         return 1;
     }
+
     struct addrinfo *p;
     for (p = servinfo; p != NULL; p = p->ai_next) {
     	if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("server: socket");
-	    continue;
+	        continue;
     	}
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
     	if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
             perror("server: bind");
-	    continue;
+	        continue;
     	}
 
 	break;
@@ -368,7 +387,7 @@ int main(int argc, char *argv[]){
 
                 }
                 else {
-		    printf("message recieved from socket %d\n", connection);
+		            printf("message recieved from socket %d\n", connection);
                     if ((numbytes = recv(connection, buffer, BUF_SIZE, 0)) == -1) {
                         perror("ERROR: recv");
                         close(connection);

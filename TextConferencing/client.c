@@ -313,7 +313,7 @@ void list(int sockfd) {
         newMessage = formatString(buff);
 
         if (newMessage->type == QU_ACK) {
-            fprintf(stdout, "User id\t\tSession ids\n%s", newMessage->data);
+            fprintf(stdout, "User id & Session ids\n%s", newMessage->data);
         }
 
         return;
