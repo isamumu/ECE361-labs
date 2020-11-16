@@ -222,7 +222,7 @@ void joinsession(char *session, int sockfd) {
         newMessage = formatString(buff);
 
         if (newMessage->type == JN_ACK) {
-            fprintf(stdout, "Join Successful!");
+            fprintf(stdout, "Join Successful!\n");
             joined = true;
         } else if (newMessage->type == JN_NACK) {
             fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
@@ -337,7 +337,7 @@ void sendMsg(int sockfd){
     }
 
     int numbytes;
-    struct message *msg;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
 
     strncpy(msg->data, buff, MAX_DATA);
@@ -429,14 +429,21 @@ int main(int argc, char **argv){
             buff[len] = ' ';
             sendMsg(sockfd);
         }
-
-        if(serversock != -1){
-            if ((bytes = recv(serversock, buff, MAXBUFLEN - 1, 0)) == -1) {
-                fprintf(stderr, "ERROR: nothing received\n");
-                return 0;
+	if(serversock != -1){
+	    struct timeval timeout;
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 999999;
+            // sockopt reconfigures the socket, must be done in order to measure the timeout
+            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
+                printf("failed to configure socket\n");
+	        exit(1);
             }
-            msg = formatString(buff);
-            printf("message recieved: %s", msg->data);
+            if ((bytes = recv(serversock, buff, MAXBUFLEN - 1, 0)) == -1) {
+                continue;
+            }
+            //msg = formatString(buff);
+	    printf("data: %s\n", buff);
+            printf("message recieved: %s", buff);
         }
     } 
 

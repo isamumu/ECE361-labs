@@ -253,7 +253,7 @@ void message_handler(int sockfd, char *msgRecv, int *exited) {
             }
             ptr = ptr->next;
         }
-        sendToPeers(session_list, myUser , newMsg->data, sockfd);
+        sendToPeers(session_list, myUser , newMsg->source, sockfd);
 
     }
 
