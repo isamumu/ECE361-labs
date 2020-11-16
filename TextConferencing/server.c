@@ -35,7 +35,8 @@ struct user *user_list = NULL; //list for every users currently logged in
 struct account *accounts = NULL;
 
 void message_handler(int sockfd, char *msgRecv) {
-    struct message *newMsg, *respMsg;
+    struct message *newMsg = (struct message *)malloc(sizeof(struct message)); 
+    struct message *respMsg = (struct message *)malloc(sizeof(struct message));
     newMsg = formatString(msgRecv);
     char buff[BUF_SIZE];
     int numbytes;
@@ -64,6 +65,8 @@ void message_handler(int sockfd, char *msgRecv) {
         if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
             fprintf(stderr, "ACK error\n");
             close(sockfd);
+	    free(respMsg);
+	    free(newMsg);
             return;
         }
     }
@@ -284,11 +287,12 @@ int main(int argc, char *argv[]){
                         if (userfd > fdmax) {
                             fdmax = userfd;
                         }
-                        printf("new connection made on socket %d\n", userfd);
+                        printf("new connection made on socket %d current fdmax: %d\n", userfd, fdmax);
                     }
 
                 }
                 else {
+		    printf("message recieved from socket %d\n", connection);
                     if ((numbytes = recv(connection, buffer, BUF_SIZE, 0)) == -1) {
                         perror("ERROR: recv");
                         close(connection);
@@ -300,7 +304,7 @@ int main(int argc, char *argv[]){
                         FD_CLR(connection, &master);
                     }
                     else {
-			
+			printf("going through message_handler\n");
                         message_handler(connection, buffer);
                     }
                 }

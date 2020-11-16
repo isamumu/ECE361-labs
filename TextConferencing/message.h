@@ -320,6 +320,8 @@ void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
 	memcpy(packetString + strptr, myPacket->data, myPacket->size);
+	packetString[strlen(packetString)] = 0;
+	printf("message: %s\n", packetString);
 	
 	
 }
@@ -339,12 +341,14 @@ struct message *formatString(char * buf) {
 	myString[0] = strtok(buf, ":");
 	myString[1] = strtok(NULL, ":");
 	myString[2] = strtok(NULL, ":");
-	//myString[3] = strtok(NULL, ":");
+	myString[3] = strtok(NULL, "\0");
 	packet_rcv->type = atoi(myString[0]);
 	packet_rcv->size = atoi(myString[1]);
         strcpy(packet_rcv->source, myString[2]);
-	int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
-	memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
+	strcpy(packet_rcv->data, myString[3]);
+	//int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
+	//memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
+	//printf("data: %s\n", packet_rcv->data);
 	print_message(packet_rcv);
 	return packet_rcv;
 }
