@@ -19,7 +19,7 @@
 bool joined = false;
 char buff[MAXBUFLEN];
 
-int serversock;
+int serversock = -1;
 
 //This fcn is used in the inet_ntop() for the login fcn as well
 void *get_in_addr(struct sockaddr *sock_arr) {
@@ -118,6 +118,7 @@ int login(char *cmd, int sockfd){
 	    memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
         printf("login message formed:\n");
+        serversock = sockfd;
         //print_message(msg);
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
@@ -373,14 +374,6 @@ int main(int argc, char **argv){
 
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
-        if(sockfd != INVALID_SOCKET){
-            if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-                fprintf(stderr, "ERROR: nothing received\n");
-                return 0 ;
-            }
-            msg = formatString(buff);
-            printf("message recieved: %s", msg->data);
-        }
 
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
@@ -435,6 +428,15 @@ int main(int argc, char **argv){
             // is sent after the new line
             buff[len] = ' ';
             sendMsg(sockfd);
+        }
+
+        if(serversock != -1){
+            if ((bytes = recv(serversock, buff, MAXBUFLEN - 1, 0)) == -1) {
+                fprintf(stderr, "ERROR: nothing received\n");
+                return 0;
+            }
+            msg = formatString(buff);
+            printf("message recieved: %s", msg->data);
         }
     } 
 
