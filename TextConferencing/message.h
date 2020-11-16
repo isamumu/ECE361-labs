@@ -325,11 +325,11 @@ void initSession(struct session *sessions, char *sessionID, struct user *newUser
 void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
 	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
-	printf("THE DATA %s", myPacket->data);
+	//printf("THE DATA %s", myPacket->data);
 	memcpy(packetString + strptr, myPacket->data, myPacket->size);
 
 	packetString[strlen(packetString)] = 0;
-	printf("message: %s\n", packetString);
+	//printf("message: %s\n", packetString);
 	
 	
 }
@@ -370,7 +370,7 @@ struct message *formatString(char * buf) {
 	//int strptr = strlen(myString[0]) + strlen(myString[1]) + strlen(myString[2]) + 3;
 	//memcpy(packet_rcv->data, buf + strptr, packet_rcv->size);
 	//printf("data: %s\n", packet_rcv->data);
-	print_message(packet_rcv);
+	//print_message(packet_rcv);
 	return packet_rcv;
 }
  

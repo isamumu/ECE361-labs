@@ -265,7 +265,7 @@ void message_handler(int sockfd, char *msgRecv) {
         
         memset(buff, 0, BUF_SIZE);
         formatMessage(respMsg, buff);
-        printf("the string is here %s", buff);
+        //printf("the string is here %s", buff);
 
         if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
             fprintf(stderr, "ACK error\n");
