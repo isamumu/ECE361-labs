@@ -237,7 +237,7 @@ void message_handler(int sockfd, char *msgRecv) {
         respMsg->type = QU_ACK;
         struct session *ptr;
         ptr = session_list->next;
-        strcpy(respMsg->source,"HI");
+        strncpy(respMsg->data, "HI", MAX_DATA);
         respMsg->size = strlen(respMsg->data);
 
         /*
