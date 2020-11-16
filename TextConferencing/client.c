@@ -179,6 +179,8 @@ void logout(int sockfd){
     joined = false;
     close(sockfd);
     sockfd = -1;
+    printf("logged out\n");
+    return;
 
 }
 
@@ -392,6 +394,7 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
 			logout(sockfd);
+			break;
 
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
