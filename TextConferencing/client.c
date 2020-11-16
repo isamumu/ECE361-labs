@@ -243,6 +243,8 @@ void leavesession(int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
+	joined = false;
+	printf("leave session success\n");
         return;
     }
 }
