@@ -235,13 +235,13 @@ void message_handler(int sockfd, char *msgRecv) {
         ptr = session_list->next;
 
         for(int i = 0; i < session_list->session_cnt; i++){
-            respMsg->data = strcat(respMsg->data, ptr->sessionName);
-            respMsg->data = strcat(respMsg->data, ": \n");
+            strcat(respMsg->data, ptr->sessionName);
+            strcat(respMsg->data, ": \n");
             struct user *uptr = session_list->next->users;
 
             for(int j = 0; j < uptr->user_cnt; j++){
-                respMsg->data = strcat(respMsg->data, uptr->name);
-                respMsg->data = strcat(respMsg->data, "\n");
+                strcat(respMsg->data, uptr->name);
+                strcat(respMsg->data, "\n");
                 uptr = uptr->next;
             }
 
@@ -289,11 +289,11 @@ int main(int argc, char *argv[]){
     // initialize users
     struct account *user1 = (struct account *)malloc(sizeof(struct account));
     struct account *user2 = (struct account *)malloc(sizeof(struct account));
-    strcpy(user1->username, "isamu");
+    strcpy(user1->name, "isamu");
     strcpy(user1->password, "ECE2T1");
     user1->next = user2;
 
-    strcpy(user2->username, "hannah");
+    strcpy(user2->name, "hannah");
     strcpy(user2->password, "ECE2T2");
     user2->next = NULL;
     accounts = user1;
