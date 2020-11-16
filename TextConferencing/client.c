@@ -310,7 +310,7 @@ void list(int sockfd) {
 		}
 
         buff[bytes] = 0; // mark end of the string
-        printf("the buffer %s\n: ", buff);
+        printf("the buffer %s: \n", buff);
         newMessage = formatString(buff);
 
         if (newMessage->type == QU_ACK) {

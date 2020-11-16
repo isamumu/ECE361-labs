@@ -324,8 +324,8 @@ void initSession(struct session *sessions, char *sessionID, struct user *newUser
 // packet to string
 void formatMessage(struct message * myPacket, char *packetString) {
 	memset(packetString, 0, BUF_SIZE);
-	int strptr = sprintf(packetString, "%d:%d:%s:%s", myPacket->type, myPacket->size, myPacket->source, myPacket->data);
-	//memcpy(packetString + strptr, myPacket->data, myPacket->size);
+	int strptr = sprintf(packetString, "%d:%d:%s:", myPacket->type, myPacket->size, myPacket->source);
+	memcpy(packetString + strptr, myPacket->data, myPacket->size);
 	packetString[strlen(packetString)] = 0;
 	printf("message: %s\n", packetString);
 	
