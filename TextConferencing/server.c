@@ -44,6 +44,7 @@ void message_handler(int sockfd, char *msgRecv) {
     // Hannah: session functions (create join and leave)
     // Isamu: rest
     if (newMsg->type == LOGIN) {
+	printf("login recieved\n");
         char *password = newMsg->data;
         char *id = newMsg->source;
         //bool match = false;
@@ -52,7 +53,7 @@ void message_handler(int sockfd, char *msgRecv) {
 	bool match = true;
         //check for user name and password
         //send back ACK and NACK accordingly
-        if(findUser(accounts, id, password)){
+        if(findAcct(accounts, id, password)){
             respMsg->type = LO_ACK;
         } else{
             respMsg->type = LO_NACK;
@@ -191,12 +192,12 @@ int main(int argc, char *argv[]){
     // initialize users
     struct account *user1 = (struct account *)malloc(sizeof(struct account));
     struct account *user2 = (struct account *)malloc(sizeof(struct account));
-    user1->id = isamu;
-    user1->password = ECE2T1;
+    strcpy(user1->username, "isamu");
+    strcpy(user1->password, "ECE2T1");
     user1->next = user2;
 
-    user2->id = hannah;
-    user2->password = ECE2T2;
+    strcpy(user2->username, "hannah");
+    strcpy(user2->password, "ECE2T2");
     user2->next = NULL;
     accounts = user1;
 
@@ -233,17 +234,22 @@ int main(int argc, char *argv[]){
         perror("cannot get IP address");
         return 1;
     }
- 
-    if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) == -1) {
-        perror("server: socket");
-    }
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    struct addrinfo *p;
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+    	if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("server: socket");
+	    continue;
+    	}
+        setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-        close(sockfd);
-        perror("server: bind");
+    	if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("server: bind");
+	    continue;
+    	}
+
+	break;
     }
-    
     //finished with finding the IP address
     freeaddrinfo(servinfo);
 
@@ -294,6 +300,7 @@ int main(int argc, char *argv[]){
                         FD_CLR(connection, &master);
                     }
                     else {
+			
                         message_handler(connection, buffer);
                     }
                 }
