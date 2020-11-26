@@ -366,11 +366,13 @@ void quit(int sockfd) {
 
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
+
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
     int bytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
+    
 
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 

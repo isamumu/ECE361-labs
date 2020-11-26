@@ -367,7 +367,6 @@ void formatMessage(struct message * myPacket, char *packetString) {
 	packetString[strlen(packetString)] = 0;
 	//printf("message: %s\n", packetString);
 	
-	
 }
 
 void print_message(struct message * myPacket) {
