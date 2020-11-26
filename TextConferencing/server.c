@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <time.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "message.h"
 
 #define BACKLOG 10
@@ -33,22 +34,46 @@ struct user *user_list = NULL; //list for every users currently logged in
 //struct account *user1;
 //struct account *user2;
 struct account *accounts = NULL;
+int userCount = 0;
+int sessionCount = 0;
 
-void message_handler(int sockfd, char *msgRecv, int *exited) {
-    struct message *newMsg = (struct message *)malloc(sizeof(struct message)); 
+pthread_mutex_t sessions_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t users_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t scnt_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ucnt_lock = PTHREAD_MUTEX_INITIALIZER;
+
+//void message_handler(int sockfd, char *msgRecv, int *exited) {
+void message_handler(void *newUser) {
+    printf("new thread created\n");
+    newUser = (struct user *)newUser;
+    struct message *recvMsg;// = (struct message *)malloc(sizeof(struct message)); 
     struct message *respMsg = (struct message *)malloc(sizeof(struct message));
-    newMsg = formatString(msgRecv);
+    //newMsg = formatString(msgRecv);
     char buff[BUF_SIZE];
     int numbytes;
+    bool exit = false;
 
-    if (newMsg == NULL) {
-        printf("NOPE");
-	    return;
-    }
 
     // TODO after creating linked list functions, implement 
     // Hannah: session functions (create join and leave)
     // Isamu: rest
+
+    while (1) {
+	memset(buff, 0, BUF_SIZE);
+	if ((numbytes = recv(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+	    perror("ERROR: recv\n");
+	    exit(1);
+	}
+        if (numbytes == 0) {
+	    exited = true;
+	}
+
+	printf("Message recieved: %s\n" buff);
+	recvMsg = formatString(buff);
+
+	if (newMsg->type == EXIT) {
+	    exited = true;
+	}
 
     if (newMsg->type == LOGIN) {
         printf("login recieved\n");
@@ -58,7 +83,7 @@ void message_handler(int sockfd, char *msgRecv, int *exited) {
         }
         char *password = newMsg->data;
         char *id = newMsg->source;
-        printf("i'm here\n");
+        //printf("i'm here\n");
             //bool match = false;
         struct user *newUser = (struct user *)malloc(sizeof(struct user));
         
@@ -433,9 +458,30 @@ int main(int argc, char *argv[]){
     FD_SET(sockfd, &master);
     fdmax = sockfd;
     printf("one moment please.....\n");
-
-    while(1) {
-        memset(buffer, 0, BUF_SIZE);
+    bool active = true; //the active bool stays true when the userCount > 0
+    while(active) {
+	struct user *newUser = (struct user *)malloc(sizeof(struct user));
+	if ((newUser->sockfd = accept(sockfd, (struct sockaddr *)&client_sock, &addr_size)) == -1) {
+	    perror("EROOR: accept");
+	    break;
+	}
+	printf("new connection made on socket %d\n", newUser->sockfd);
+	pthread_mutex_lock(ucnt_lock);
+	userCount++;
+	pthread_nutex_unlock(ucnt_lock);
+	pthread_create(&(newUser->thread), NULL, &message_handler, (void *)newUser);
+	if (userCount > 0) {
+	    active = true;
+	}
+	else {
+	    active = false;
+	}
+    }
+    printf("closing server\n");
+    close(sockfd);
+    return 0;
+}
+        /*memset(buffer, 0, BUF_SIZE);
         read_fds = master;
         if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1 ) {
             perror("select");
@@ -476,13 +522,13 @@ int main(int argc, char *argv[]){
                         break;
                     }
                     else {
-			                  printf("going through message_handler: %s\n", buffer);
+			printf("going through message_handler: %s\n", buffer);
                         message_handler(connection, buffer, &exited);
-			                  if (exited == 1) {
-			                      close(connection);
-			                      FD_CLR(connection, &master);
-			                      exited = 0;
-			                  }
+			if (exited == 1) {
+				close(connection);
+				FD_CLR(connection, &master);
+				exited = 0;
+		    	}
                     }
                 }
             }
@@ -497,6 +543,6 @@ int main(int argc, char *argv[]){
             }
             printf("server closed\n");
             return 0;
-	}
+	}*/
     }    
 }
