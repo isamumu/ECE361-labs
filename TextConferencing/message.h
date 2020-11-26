@@ -309,7 +309,9 @@ void sendToPeers(struct session *head, struct user *myUser, char *message, int s
 		
 		while (myPtr != NULL){
 			// send to each element of the list
-			
+			//if (myPtr->sockfd == sockfd) {
+				//continue;
+			//}
 			if((numbytes = send(myPtr->sockfd, message, BUF_SIZE - 1, 0)) == -1){
 				fprintf(stderr, "ACK error\n");
 				//close(sockfd);
@@ -389,6 +391,11 @@ struct message *formatString(char * buf) {
 	myString[2] = strtok(NULL, ":");
 	myString[3] = strtok(NULL, "\0");
 
+	if (myString[3] == NULL) {
+		printf("helloehelloe-------------\n");
+		myString[3] = myString[2];
+		myString[2] = NULL;
+	}
 	if (myString[0] != NULL) {
 	    packet_rcv->type = atoi(myString[0]);
 	}
