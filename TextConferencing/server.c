@@ -212,15 +212,18 @@ void message_handler(int sockfd, char *msgRecv, int *exited) {
         dummy->sessionID = NULL;
         dummy->sockfd = -1;
     	//dummy->next = myuser;
-        newSession->sessionName = newMsg->source;
+        newSession->sessionName = newMsg->data;
+	//newSession->sessionName = newMsg->source;
         newSession->users = dummy;
 	    addUser(newSession->users, myuser);
         //newSession->users->user_cnt = 1;
         newSession->next = NULL;
 
         if (this_user->sessionID == NULL) {
-            this_user->sessionID = newMsg->source;
-            myuser->sessionID = newMsg->source;
+            this_user->sessionID = newMsg->data;
+	    //this_user->sessionID = newMsg->source;
+            myuser->sessionID = newMsg->data;
+	    //myuser->sessionID = newMsg->source;
             addSession(session_list, newSession);
             respMsg->type = NS_ACK;
         }
@@ -354,13 +357,18 @@ int main(int argc, char *argv[]){
     // initialize users
     struct account *user1 = (struct account *)malloc(sizeof(struct account));
     struct account *user2 = (struct account *)malloc(sizeof(struct account));
+    struct account *user3 = (struct account *)malloc(sizeof(struct account));
     strcpy(user1->id, "isamu");
     strcpy(user1->password, "ECE2T1");
     user1->next = user2;
 
     strcpy(user2->id, "hannah");
     strcpy(user2->password, "ECE2T2");
-    user2->next = NULL;
+    user2->next = user3;
+
+    strcpy(user3->id, "a");
+    strcpy(user3->password, "b");
+    user3->next = NULL;
     accounts = user1;
 
     //===================Section 1=====================================================

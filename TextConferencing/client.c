@@ -431,7 +431,7 @@ int main(int argc, char **argv){
         }
 	if(serversock != -1){
 	    struct timeval timeout;
-            timeout.tv_sec = 0;
+            timeout.tv_sec = 1;
             timeout.tv_usec = 999999;
             // sockopt reconfigures the socket, must be done in order to measure the timeout
             if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
