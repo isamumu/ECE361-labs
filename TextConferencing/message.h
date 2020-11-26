@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #define MAX_NAME 1100
 #define MAX_DATA 4096
 #define BUF_SIZE 1100
@@ -28,6 +30,7 @@ struct message {
 
 // for each joined user
 struct user {
+    pthread_t thread;
     char name[MAX_NAME];
     char password[MAX_NAME];
     char *sessionID;
