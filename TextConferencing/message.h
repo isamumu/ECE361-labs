@@ -81,18 +81,18 @@ bool findAcct(struct account *head, char *username, char *password){
 // TODO Hannah
 void addSession(struct session *head, struct session *mySession) {
 	if (head == NULL) {
-		printf("addSession: head is null\n");
+		head = mySession;
 		return;
 	}
 	struct session *ptr = head;
 	while (ptr->next != NULL) {
 		ptr = ptr->next;
 	}
-	mySession->users->user_cnt = 0;
+	//mySession->users->user_cnt = 0;
 
 	ptr->next = mySession;
 	mySession->next = NULL;
-	head->session_cnt += 1;
+	//head->session_cnt += 1;
 
 	return;
 }
@@ -100,6 +100,7 @@ void addSession(struct session *head, struct session *mySession) {
 void addUser(struct user *head, struct user *myUser) {
 	if (head == NULL) {
 		printf("addUser: head is null\n");
+		head = myUser;
 		return;
 	}
 	struct user *ptr = head;
@@ -109,7 +110,7 @@ void addUser(struct user *head, struct user *myUser) {
 
 	ptr->next = myUser;
 	myUser->next = NULL;
-	head->user_cnt = head->user_cnt + 1;// += 1;
+	//head->user_cnt = head->user_cnt + 1;// += 1;
 
 
 	return;
@@ -120,7 +121,7 @@ struct session *findSession(struct session *head, char *name) {
 		printf("findSession: head is null\n");
 		return NULL;
 	}
-	struct session *ptr = head->next;
+	struct session *ptr = head;
 	while (ptr != NULL) {
 		if (strcmp(ptr->sessionName, name) == 0) {
 			return ptr;
@@ -136,7 +137,7 @@ struct user *findUser(struct user *head, int fd) {
 		printf("findUser: head is null\n");
 		return NULL;
 	}
-	struct user *ptr = head->next;
+	struct user *ptr = head;
 	while (ptr != NULL) {
 		if (ptr->sockfd == fd) {
 			return ptr;
@@ -147,40 +148,46 @@ struct user *findUser(struct user *head, int fd) {
 	return NULL;
 }
 
-// prone to bugs
 void removeSession(struct session *head, char *sessName) {
 	if (head == NULL) {
 		printf("removeSession: head is null\n");
 		return;
 	}
 
-	struct session *ptr = head->next;
+	struct session *ptr = head;
 	// if the session of interest is the head
 	/*if (strcmp(ptr->sessionName, sessName) == 0) {
-		head->session_cnt -= 1;
-		head->next->session_cnt = head->session_cnt;
+		//head->session_cnt -= 1;
+		//head->next->session_cnt = head->session_cnt;
 		head = head->next;
 		free(ptr);
 		return;
 	}*/
-
-	struct session *pptr = ptr->next;
-	while (pptr != NULL) {
+	//ptr = ptr->next;
+	struct session *pptr = NULL;
+	while (ptr != NULL) {
 		if (strcmp(pptr->sessionName, sessName) == 0) {
-			ptr->next = pptr->next;
-			pptr->next = NULL;
+			if (pptr == NULL) {
+			    head = head->next;
+			    ptr->next = NULL;
+			    free(ptr);
+			    return;
+			}
+			pptr->next = ptr->next;
+			ptr->next = NULL;
 			free(pptr);
 			return;
 		}
-		pptr = pptr->next;
+		pptr = ptr;
 		ptr = ptr->next;
 	}
-	if (strcmp(ptr->sessionName, sessName) == 0) {
+	//if session of interest is the last
+	/*if (strcmp(ptr->sessionName, sessName) == 0) {
 		head->session_cnt = 0;
 		head->next = NULL;
 		free(ptr);
 		return;
-	}
+	}*/
 	printf("removeSession: session not found\n");
 	return;
 }
@@ -191,31 +198,45 @@ void removeUser(struct user *head, struct user *myUser) {
 		printf("removeUser: head is null\n");
 		return;
 	}
-	head->user_cnt -= 1;
+	//head->user_cnt -= 1;
 	struct user *ptr = head;
-	if (strcmp(ptr->name, myUser->name) == 0) {
+	/*if (strcmp(ptr->name, myUser->name) == 0) {
 		head->next->user_cnt = head->user_cnt;
 		head = head->next;
 		free(ptr);
 		return;
-	}
+	}*/
 
-	struct user *pptr = head->next;
-	while (pptr != NULL) {
-		if (strcmp(pptr->name, myUser->name) == 0) {
-			ptr->next = pptr->next;
-			pptr->next = NULL;
-			free(pptr);
+	struct user *pptr = NULL;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, myUser->name) == 0) {
+			if (pptr == NULL) {
+			    head = head->next;
+			    ptr->next = NULL;
+			    free(ptr);
+			    return;
+			}
+			pptr->next = ptr->next;
+			ptr->next = NULL;
+			free(ptr);
 			return;
 		}
-		pptr = pptr->next;
+		pptr = ptr;
 		ptr = ptr->next;
 	}
 	printf("removeUser: user not found / not logged in\n");
 	return;
 }
 
-void removeUser_fd(struct user *head, int fd) {
+void removeSessUser(struct session *sessLeave, struct user *usr, struct session *head) {
+	removeUser(sessLeave->users, usr);
+	if (sessLeave->users == NULL) {
+		removeSession(head, sessLeave->sessionName);
+	}
+	return;
+}
+
+/*void removeUser_fd(struct user *head, int fd) {
 	if (head == NULL) {
 		printf("removeUser: head is null\n");
 		return;
@@ -242,7 +263,7 @@ void removeUser_fd(struct user *head, int fd) {
 	}
 	printf("removeUser: user not found / not logged in\n");
 	return;
-}
+}*/
 
 void printUser(struct user *curr) {
 	if (curr == NULL) {
