@@ -228,7 +228,7 @@ void joinsession(char *session, int sockfd) {
     }
 }
 
-void leavesession(int sockfd) {
+void leavesession(char *session, int sockfd) {
     if (sockfd == -1) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
@@ -236,6 +236,7 @@ void leavesession(int sockfd) {
         struct message newMessage;
         newMessage.type = LEAVE_SESS;
         newMessage.size = 0;
+        strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
 
         int bytes;
 
@@ -289,7 +290,7 @@ void createsession(char *session, int sockfd) {
     }
 }
 
-void list(int sockfd) {
+void list(char* session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
@@ -297,6 +298,8 @@ void list(int sockfd) {
         struct message *newMessage;
         newMessage->type = QUERY;
         newMessage->size = 0;
+        strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to list
+
         int bytes;
         formatMessage(newMessage, buff);
 
@@ -328,10 +331,16 @@ void sendMsg(int sockfd){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } 
+    char *targetSession;
+    // stage 1. determine which session if any
+    scanf(“Send message to: %s”, targetSession);
 
+    // stage 2. send message in that session
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
+    msg->targetSession = targetSession;
+    // the receiver should based on this target session locate the right socket to send to
 
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
@@ -357,6 +366,50 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
+void invite(char* session, char* user, int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+	printf("Please login to a server before trying to join a session\n");
+	return;
+    }
+
+    int numbytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+    msg->type = INVITE;
+    strncpy(msg->targetUser, user, MAX_DATA);
+    strncpy(msg->data, session, MAX_DATA);
+
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
+
+void accept(char* response, char* session, char* user, int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+        printf("Please login to a server before trying to join a session\n");
+        return;
+    }
+
+    int numbytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+    msg->type = ACCEPT;
+    strncpy(msg->targetUser, user, MAX_DATA);
+    strncpy(msg->data, response, MAX_DATA);
+
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
+
 /*
 PART 2 Objectives (Client):
 --> Allow  a  client  to join  multiple  sessions.  If  so,  you  should  clearly  indicate  on  the client’s terminal the session identification of every message. 
@@ -365,6 +418,8 @@ PART 2 Objectives (Client):
 ------> create a new field in user to document which sessions they have joined. ie each user should have a linked list for joined sessions
 --> Implement a procedure for a client to invite other clients into a session. If so, you must provide a protocol for a client to either accept or refuse an invitation
 ------> create a protocol similar to lab 1. client1 (join invite) -> server (forward) -> client2 (resp) -> server (forward) -> client1 (Y: joinsession for client2 sock OR N: do nothing)
+
+NOTE: now the client takes in a session field which indicates which session the user wants to leave, list, or send messages at
 
 PART 2 Objectives (Server):
 --> Keep all sessions that theclient joined. If one client could join multiple sessions, you should carefully design the up-to-date list.

@@ -19,12 +19,16 @@ enum messageType {
 	MESSAGE,
 	QUERY,
 	QU_ACK,
+	INVITE,
+	ACCEPT
 };
 
 struct message {
     unsigned int type;
     unsigned int size;
     unsigned char source[MAX_NAME];
+	unsigned char targetSession[MAX_NAME];
+	unsigned char targetUser[MAX_NAME];
     unsigned char data[MAX_DATA];
 };
 
