@@ -16,7 +16,7 @@
 #define BYTE_LIMIT 1000
 #define INVALID_SOCKET -1
 
-bool joined = false;
+//bool joined = false;
 char buff[MAXBUFLEN];
 
 int serversock = -1;
@@ -179,7 +179,7 @@ void logout(int sockfd){
         return;
     }
 
-    joined = false;
+    //joined = false;
     close(sockfd);
     sockfd = -1;
     printf("logged out\n");
@@ -193,10 +193,6 @@ void joinsession(char *session, int sockfd) {
         return;
     } else if (sockfd == -1){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
-        return;
-
-    } else if(joined){
-        fprintf(stdout, "can't join multiple sessions");
         return;
 
     } else {
@@ -223,10 +219,10 @@ void joinsession(char *session, int sockfd) {
 
         if (newMessage->type == JN_ACK) {
             fprintf(stdout, "Join Successful!\n");
-            joined = true;
+            //joined = true;
         } else if (newMessage->type == JN_NACK) {
             fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
-            joined = false;
+            //joined = false;
 	}
         return;
     }
@@ -249,7 +245,7 @@ void leavesession(int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
-	joined = false;
+	//joined = false;
 	printf("leave session success\n");
         return;
     }
@@ -287,7 +283,7 @@ void createsession(char *session, int sockfd) {
         
         if (newMessage->type == NS_ACK) {
             printf("Successfully created and joined session %s.\n", newMessage->data);
-            joined = true;
+            //joined = true;
         }
         return;
     }
@@ -331,10 +327,7 @@ void sendMsg(int sockfd){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
-    } else if(!joined){
-        fprintf(stdout, "Please login to a session before trying to join a session\n");
-        return;
-    }
+    } 
 
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
@@ -363,6 +356,21 @@ void quit(int sockfd) {
     }
     printf("program quitted\n");
 }
+
+/*
+PART 2 Objectives (Client):
+--> Allow  a  client  to join  multiple  sessions.  If  so,  you  should  clearly  indicate  on  the client’s terminal the session identification of every message. 
+------> check joinSession and allow for multiple sessions.
+------> do i need multithreading? I don't think so...
+------> create a new field in user to document which sessions they have joined. ie each user should have a linked list for joined sessions
+--> Implement a procedure for a client to invite other clients into a session. If so, you must provide a protocol for a client to either accept or refuse an invitation
+------> create a protocol similar to lab 1. client1 (join invite) -> server (forward) -> client2 (resp) -> server (forward) -> client1 (Y: joinsession for client2 sock OR N: do nothing)
+
+PART 2 Objectives (Server):
+--> Keep all sessions that theclient joined. If one client could join multiple sessions, you should carefully design the up-to-date list.
+--> If one client could invite other clients into a session, the server should be able to forward the invitation and corresponding messages to the specific clients. 
+--> You may wish to use a timerwith each client, to disconnect clients that have been inactive for a long time.
+*/
 
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
