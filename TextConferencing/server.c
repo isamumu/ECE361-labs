@@ -281,18 +281,19 @@ void *message_handler(void *arg) {
 	        printf("MESSAGE recieved for user: %s\n", newUser->name);
             //struct user *ptr = user_list;
             
-            // char *session = strtok(newMsg->data, "->");
-            // char *text = strtok(NULL, "->");
+            char *targetSession = strtok(newMsg->data, ",");
+            printf("session: %s\n", session);
+            char *text = strtok(NULL, ",");
+            printf("text: %s\n", text);
 
             struct user *myUser;
             respMsg->type = MESSAGE;
-            strcpy(respMsg->data, newMsg->data);
+            strcpy(respMsg->data, text);
             respMsg->size = strlen(respMsg->data);
             //formatMessage(respMsg, buff);
             //struct session *session_found = findSession(session_list, newUser->sessionID);
             if (newUser->sessionID == NULL) {
                 memset(respMsg->data, 0, MAX_DATA);
-                printf("i'n here\n");
                 char tmp[100] = "no Session Joined";
                 strcpy(respMsg->data, tmp);
                 respMsg->size = strlen(respMsg->data);
@@ -306,19 +307,22 @@ void *message_handler(void *arg) {
                 }
             }
             else {
-                    //sendToPeers(session_list, newUser , buff, sockfd);
-                struct session *session_found = findSession(session_list, newUser->sessionID);
+                 
+                // locate the session and its users
+                struct session *session_found = findSession(session_list, targetSession);
                 formatMessage(respMsg, buff);
                 struct user *ptr = session_found->users;
                 printf("message: %s\n", respMsg->data);
+
+                // send to every user in the session
                 while(ptr != NULL) {
-                printf("sending message to user %s\n", ptr->name);
-                if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
-                    perror("ERROR: send\n");
-                    exit(1);
+                    printf("sending message to user %s\n", ptr->name);
+                    if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+                        perror("ERROR: send\n");
+                        exit(1);
+                    }
+                    ptr = ptr->next;
                 }
-                ptr = ptr->next;
-            }
             }
         }
 
