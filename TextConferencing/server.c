@@ -104,7 +104,7 @@ void *message_handler(void *arg) {
 		    memcpy(myuser, newUser, sizeof(struct user));
                     //newUser->user_cnt = -1;
 	            pthread_mutex_lock(&users_lock);
-                    addUser(&user_list, myuser);
+                    addUser(&user_list, newUser);
 	            pthread_mutex_unlock(&users_lock);
 		    isLogin = true;
 	            printf("user %s logged in\n", newUser->name);
@@ -190,7 +190,7 @@ void *message_handler(void *arg) {
     	            //myuser->sockfd = this_user->sockfd;
     	            //myuser->user_cnt = -1;
     	            //myuser->next = NULL;
-		    memcpy((void *)newUser, (void *)myuser, sizeof(struct user));
+		    memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
 		    pthread_mutex_lock(&sessions_lock);
                     addUser(&session_found->users, myuser);
 		    pthread_mutex_unlock(&sessions_lock);
@@ -227,8 +227,8 @@ void *message_handler(void *arg) {
 	        //}
 	        //this_user->sessionID = NULL;
 		pthread_mutex_lock(&sessions_lock);
-	        removeSessUser(session_found, newUser, session_list);
-		pthread_mutex_lock(&sessions_lock);
+	        removeSessUser(session_found, newUser, &session_list);
+		pthread_mutex_unlock(&sessions_lock);
                     //if (session_found->users->user_cnt == -1) {
 		        //printf("session name: %s\n", this_user->sessionID);
                	        //removeSession(session_list, this_user->sessionID);
@@ -277,16 +277,19 @@ void *message_handler(void *arg) {
 	    //pthread_mutex_unlock(sessions_lock);
             //newSession->users->user_cnt = 1;
             //newSession->next = NULL;
-
+	    //printUser(newUser);
             if (newUser->sessionID == NULL) {
 	        struct session *newSession = (struct session *)malloc(sizeof(struct session));
-	        newUser->sessionID = newMsg->data;
+		print_message(newMsg);
+		newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
+	        strcpy(newUser->sessionID, newMsg->data);
 	        struct user *myuser = (struct user *)malloc(sizeof(struct user));
-		memcpy((void *)newUser, (void *)myuser, sizeof(struct user));
+		memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
 	        newSession->sessionName = newMsg->data;
 	        newSession->users = NULL;
-	        //pthread_mutex_lock(sessions_lock);
+	        pthread_mutex_lock(&sessions_lock);
 	        addUser(&newSession->users, myuser);
+		pthread_mutex_unlock(&sessions_lock);
 	        newSession->next = NULL;
                 //newUser->sessionID = newMsg->data;
 	        //this_user->sessionID = newMsg->source;
@@ -298,6 +301,7 @@ void *message_handler(void *arg) {
 	        pthread_mutex_lock(&sessions_lock);
                 addSession(&session_list, newSession);
 	        pthread_mutex_unlock(&sessions_lock);
+            	printSessions(session_list); //check
                 respMsg->type = NS_ACK;
 	        strcpy(respMsg->data, newUser->sessionID);
             }
@@ -331,22 +335,40 @@ void *message_handler(void *arg) {
 	    respMsg->type = MESSAGE;
 	    strcpy(respMsg->data, newMsg->data);
 	    respMsg->size = strlen(respMsg->data);
-	    formatMessage(respMsg, buff);
-	    struct session *session_found = findSession(session_list, newUser->sessionID);
-            //sendToPeers(session_list, newUser , buff, sockfd);
-	    struct user *ptr = session_found->users;
-	    printf("message: %s\n", respMsg->data);
-	    while(ptr != NULL) {
-		printf("sending message to user %s\n", ptr->name);
-		if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+	    //formatMessage(respMsg, buff);
+	    //struct session *session_found = findSession(session_list, newUser->sessionID);
+	    if (newUser->sessionID == NULL) {
+		memset(respMsg->data, 0, MAX_DATA);
+		printf("i'n here\n");
+		char tmp[100] = "no Session Joined";
+		strcpy(respMsg->data, tmp);
+		respMsg->size = strlen(respMsg->data);
+		formatMessage(respMsg, buff);
+		printf("message sent: %s\n", respMsg->data);
+		printf("user not joined in session\n");
+		if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
 		    perror("ERROR: send\n");
 		    exit(1);
 		}
-		ptr = ptr->next;
-	   }
+	    }
+	    else {
+                //sendToPeers(session_list, newUser , buff, sockfd);
+		struct session *session_found = findSession(session_list, newUser->sessionID);
+		formatMessage(respMsg, buff);
+	        struct user *ptr = session_found->users;
+	        printf("message: %s\n", respMsg->data);
+	        while(ptr != NULL) {
+		    printf("sending message to user %s\n", ptr->name);
+		    if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+		        perror("ERROR: send\n");
+		        exit(1);
+		    }
+		    ptr = ptr->next;
+	       }
+	    }
         }
 
-        else { // newMsg.type == QUERY
+        else if (newMsg->type == QUERY) {
             //print out the list of user and avaliable sessions
             //send back ACK
 	    printf("QUERY recieved for user: %s\n", newUser->name);
@@ -412,7 +434,10 @@ void *message_handler(void *arg) {
 	if (exited) {
             break;
 	}
+	//printf("end of loop\n");
+	//printUser(newUser);
     }
+    printf("socket exit??\n");
     close(newUser->sockfd);
     if (isLogin) {
 	pthread_mutex_lock(&users_lock);
@@ -423,7 +448,7 @@ void *message_handler(void *arg) {
 	    struct user *uptr = ptr->users;
 	    while (uptr != NULL) {
 		pthread_mutex_lock(&sessions_lock);
-		removeSessUser(ptr, newUser, session_list);
+		removeSessUser(ptr, newUser, &session_list);
 		pthread_mutex_unlock(&sessions_lock);
 	    }
 	    ptr = ptr->next;

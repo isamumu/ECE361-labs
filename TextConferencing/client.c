@@ -29,8 +29,36 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
+void *msgRecv(void *arg) {
+    printf("new thread created\n");
+    int *sockfd = (int *)arg;
+    printf("my sockfd: %d\n", *sockfd);
+    struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
+    int numbytes;
+    while(1) {
+	if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+	    perror("ERROR: recv\n");
+	    return NULL;
+	}
+	if (numbytes == 0) {
+	    continue;
+	}
+	recvMsg = formatString(buff);
+	if (recvMsg->type == MESSAGE) {
+	    printf("%s\n", recvMsg->data);
+	}
+	else if (recvMsg->type == JN_ACK) {
+	    printf("Joined successfully!\n");
+	}
+	else if (recvMsg->type == NS_ACK) {
+	    printf("Added new session and joined successfully!\n");
+	}
+    }
+    return NULL;
+} 
 
-int login(char *cmd, int sockfd){
+
+int login(char *cmd, int *sockfd, pthread_t *recv_thread){
     char *id, *password, *ip, *port;
     struct addrinfo hints, *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
@@ -55,11 +83,11 @@ int login(char *cmd, int sockfd){
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
-		return sockfd;
+		return *sockfd;
 
-	}  else if(sockfd != -1){
+	}  else if(*sockfd != -1){
         printf("ERROR: attempted multiple logins");
-        return sockfd;
+        return *sockfd;
 
     } else {
         //instantiate TCP protocol
@@ -80,14 +108,14 @@ int login(char *cmd, int sockfd){
         // referenced from Beej's code pg.35
         // get socket from server port
         for(p = servinfo; p != NULL; p = p->ai_next) {
-            if ((sockfd = socket(p->ai_family, p->ai_socktype,
+            if ((*sockfd = socket(p->ai_family, p->ai_socktype,
                 servinfo->ai_protocol)) == -1) {
                 perror("client: socket\n");
                 continue;
             }
 
-            if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-                close(sockfd);
+            if (connect(*sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+                close(*sockfd);
                 perror("client: connect\n");
                 continue;
             }
@@ -97,9 +125,9 @@ int login(char *cmd, int sockfd){
 
         if (p == NULL) {
             printf("client: failed to connect\n");
-            close(sockfd);
-            sockfd = -1; // make the socket variable reusable for next connection 
-            return sockfd;
+            close(*sockfd);
+            *sockfd = -1; // make the socket variable reusable for next connection 
+            return *sockfd;
         }
 
         // at this point we have the socket, so let's connect!
@@ -118,12 +146,12 @@ int login(char *cmd, int sockfd){
 	    memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
         printf("login message formed: %s\n", buff);
-        serversock = sockfd;
+        //serversock = *sockfd;
         //print_message(msg);
-        if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
             fprintf(stderr, "login error\n");
-			close(sockfd);
-            sockfd = -1;
+			close(*sockfd);
+            *sockfd = -1;
 			return -1;
         }
         
@@ -131,7 +159,7 @@ int login(char *cmd, int sockfd){
         // --> LO_ACK - login successful
         // --> LO_NAK - login unsuccessful
         
-        if ((numbytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+        if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
             fprintf(stderr, "ERROR: nothing received\n");
             return -1;
         }
@@ -142,21 +170,22 @@ int login(char *cmd, int sockfd){
 
         if(msg->type == LO_ACK){
             fprintf(stdout, "login success!\n");
-	    return sockfd;
+	    pthread_create(recv_thread, NULL, msgRecv, sockfd);
+	    return *sockfd;
 
         } else if (msg->type == LO_NACK) {
             fprintf(stdout, "login failure b/c %s\n", msg->data);
-            close(sockfd);
-            sockfd = -1;
+            close(*sockfd);
+            *sockfd = -1;
 
-            return sockfd;
+            return *sockfd;
         } else {
             fprintf(stdout, "INVALID INPUT: type %d, data %s\n", msg->type, msg->data);
             //close(socketfd_p);
             //*socketfd_p = INVALID_SOCKET;
-            close(sockfd);
-            sockfd = -1;
-            return sockfd;
+            close(*sockfd);
+            *sockfd = -1;
+            return *sockfd;
         } 
     }
 }
@@ -209,7 +238,7 @@ void joinsession(char *session, int sockfd) {
             return;
         }
 
-        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+        /*if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
 			fprintf(stderr, "ERROR: nothing received\n");
 			return;
 		}
@@ -223,7 +252,7 @@ void joinsession(char *session, int sockfd) {
         } else if (newMessage->type == JN_NACK) {
             fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
             //joined = false;
-	}
+	}*/
         return;
     }
 }
@@ -233,6 +262,7 @@ void leavesession(char *session, int sockfd) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } else {
+	printf("leaving sessions\n");
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = LEAVE_SESS;
         newMessage->size = 0;
@@ -241,6 +271,7 @@ void leavesession(char *session, int sockfd) {
         int bytes;
 
         formatMessage(newMessage, buff);
+	printf("message sent: %s\n", buff);
 
         if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
@@ -274,7 +305,7 @@ void createsession(char *session, int sockfd) {
             return;
         }
 
-        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+        /*if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
 			printf("ERROR: nothing received\n");
 			return;
 		}
@@ -285,7 +316,7 @@ void createsession(char *session, int sockfd) {
         if (newMessage->type == NS_ACK) {
             printf("Successfully created and joined session %s.\n", newMessage->data);
             //joined = true;
-        }
+        }*/
         return;
     }
 }
@@ -333,6 +364,7 @@ void sendMsg(int sockfd, char *targetSession){
     } 
 
     // stage 2. send message in that session
+    printf("sending message: %s\n", buff);
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
@@ -340,7 +372,9 @@ void sendMsg(int sockfd, char *targetSession){
     strncpy(msg->targetSession, targetSession, MAX_DATA);
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
+    memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
+    printf("message sent: %s\n", buff);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
@@ -431,6 +465,7 @@ int main(int argc, char **argv){
     int len;
     int bytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
+    pthread_t thread;
     
 
     // for(;;) is an infinite loop for C like while(1)
@@ -455,7 +490,7 @@ int main(int argc, char **argv){
         if (strcmp(cmd, "/login") == 0) {
             // log into the server at a given address and port
             // the IP address is specified in string dot format
-			sockfd = login(cmd, sockfd);
+			sockfd = login(cmd, &sockfd, &thread);
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
@@ -470,7 +505,7 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
-            //leavesession(sockfd);
+            leavesession("all", sockfd);
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
@@ -488,8 +523,10 @@ int main(int argc, char **argv){
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
-            //sendMsg(sockfd);
+	    
+            sendMsg(sockfd, "all");
         }
+	/*
 	if(serversock != -1){
 	    struct timeval timeout;
             timeout.tv_sec = 1;
@@ -505,8 +542,8 @@ int main(int argc, char **argv){
             //msg = formatString(buff);
 	    printf("data: %s\n", buff);
             printf("message recieved: %s\n", buff);
-        }
-    } 
+        }*/
+    }
 
     fprintf(stdout, "text conference done.\n");
     return 0;

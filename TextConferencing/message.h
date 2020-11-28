@@ -85,6 +85,7 @@ bool findAcct(struct account *head, char *username, char *password){
 // TODO Hannah
 void addSession(struct session **head, struct session *mySession) {
 	if (*head == NULL) {
+		printf("addSession: head is null\n");
 		*head = mySession;
 		return;
 	}
@@ -171,7 +172,7 @@ void removeSession(struct session **head, char *sessName) {
 	//ptr = ptr->next;
 	struct session *pptr = NULL;
 	while (ptr != NULL) {
-		if (strcmp(pptr->sessionName, sessName) == 0) {
+		if (strcmp(ptr->sessionName, sessName) == 0) {
 			if (pptr == NULL) {
 			    *head = (*head)->next;
 			    ptr->next = NULL;
@@ -233,10 +234,11 @@ void removeUser(struct user **head, struct user *myUser) {
 	return;
 }
 
-void removeSessUser(struct session *sessLeave, struct user *usr, struct session *head) {
+void removeSessUser(struct session *sessLeave, struct user *usr, struct session **head) {
 	removeUser(&sessLeave->users, usr);
 	if (sessLeave->users == NULL) {
-		removeSession(&head, sessLeave->sessionName);
+		printf("i'm here\n");
+		removeSession(head, sessLeave->sessionName);
 	}
 	return;
 }
@@ -279,7 +281,7 @@ void printUser(struct user *curr) {
 	printf("password: %s\n", curr->password); //for debug
 	printf("sessionID: %s\n", curr->sessionID); //for debug
 	printf("socket: %d\n", curr->sockfd); //for debug
-	printf("user count: %d\n", curr->user_cnt);
+	//printf("user count: %d\n", curr->user_cnt);
 }
 
 void printUsers(struct user *head) {
@@ -301,7 +303,7 @@ void printSess(struct session *curr) {
 		return;
 	}
 	printf("session ID: %s\n", curr->sessionName);
-	printf("session count %d\n", curr->session_cnt);
+	//printf("session count %d\n", curr->session_cnt);
 	printf("--------contianed Users----------\n");
 	printUsers(curr->users);
 }
@@ -421,7 +423,7 @@ struct message *formatString(char * buf) {
 	myString[3] = strtok(NULL, "\0");
 
 	if (myString[3] == NULL) {
-		printf("helloehelloe-------------\n");
+		//printf("helloehelloe-------------\n");
 		myString[3] = myString[2];
 		myString[2] = NULL;
 	}
