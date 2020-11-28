@@ -434,8 +434,6 @@ void acceptReq(char* response, char* session, char* user, int sockfd) {
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = ACCEPT;
-    strncpy(msg->targetUser, user, MAX_DATA);
-    strncpy(msg->data, response, MAX_DATA);
 
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
