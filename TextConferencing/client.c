@@ -33,7 +33,7 @@ void acceptReq(char *session, int sockfd);
 
 void *msgRecv(void *arg) {
     printf("new thread created\n");
-    int sockfd = &(int *)arg;
+    int sockfd = (int *)arg;
     printf("my sockfd: %d\n", *sockfd);
     struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
     int numbytes;
@@ -56,7 +56,7 @@ void *msgRecv(void *arg) {
             printf("Added new session and joined successfully!\n");
         }
         else if (recvMsg->type == INVITE){
-            acceptReq(recvMsg->data, sockfd);
+            acceptReq(recvMsg->data, *sockfd);
         }
     }
     return NULL;
@@ -435,7 +435,7 @@ void invite(char *cmd, int sockfd) {
 }
 
 acceptReq(char *session, int sockfd) {
-    if (&sockfd == INVALID_SOCKET) {
+    if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
     }
