@@ -329,32 +329,30 @@ void *message_handler(void *arg) {
 
         else if (newMsg->type == INVITE) {
             // obtain the invited session and the user to invite
-            printf("incoming invitation from %s", newMsg->data);
+            printf("incoming invitation from %s\n", newMsg->data);
             char *invitee= strtok(newMsg->data, ",");
             printf("invited: %s\n", invitee);
             char *src = strtok(NULL, ",");
             printf("session: %s\n", src);
 
             // find the socket of the user
-            char *response;
-            response = strcat("Accept invitation to ", src);
-            response = strcat(respMsg->data, "? (Y/N)");
-
-            respMsg->type = INVITE;
-            strcpy(respMsg->data, response);
-            respMsg->size = strlen(respMsg->data);
-
-            memset(buff, 0, MAXBUFLEN);
-            formatMessage(respMsg, buff);
-
             struct user *nominee = findUserName(user_list, invitee);
             printf("nominee is found: %s\n", nominee->name);
+
+            respMsg->type = INVITE;
+            strcpy(respMsg->data, src);
+            respMsg->size = strlen(respMsg->data);
+            //memset(buff, 0, MAXBUFLEN);
+            formatMessage(respMsg, buff);
+
+            printf("yoohoo\n");
 
             int numbytes;
             if((numbytes = send(nominee->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
                 fprintf(stderr, "send error\n");
                 return 0;
             }
+
 
         }
         else if (newMsg->type == QUERY) {

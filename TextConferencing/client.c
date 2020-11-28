@@ -29,6 +29,8 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
+void acceptReq(char *session, int sockfd);
+
 void *msgRecv(void *arg) {
     printf("new thread created\n");
     int *sockfd = (int *)arg;
@@ -36,23 +38,27 @@ void *msgRecv(void *arg) {
     struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
     int numbytes;
     while(1) {
-	if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-	    perror("ERROR: recv\n");
-	    return NULL;
-	}
-	if (numbytes == 0) {
-	    continue;
-	}
-	recvMsg = formatString(buff);
-	if (recvMsg->type == MESSAGE) {
-	    printf("%s\n", recvMsg->data);
-	}
-	else if (recvMsg->type == JN_ACK) {
-	    printf("Joined successfully!\n");
-	}
-	else if (recvMsg->type == NS_ACK) {
-	    printf("Added new session and joined successfully!\n");
-	}
+        if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+            perror("ERROR: recv\n");
+            return NULL;
+        }
+        if (numbytes == 0) {
+            continue;
+        }
+        recvMsg = formatString(buff);
+        if (recvMsg->type == MESSAGE) {
+            printf("%s\n", recvMsg->data);
+        }
+        else if (recvMsg->type == JN_ACK) {
+            printf("Joined successfully!\n");
+        }
+        else if (recvMsg->type == NS_ACK) {
+            printf("Added new session and joined successfully!\n");
+        }
+        else if (recvMsg->type == INVITE){
+            printf("aya\n");
+            acceptReq(recvMsg->data, *sockfd);
+        }
     }
     return NULL;
 } 
@@ -403,25 +409,24 @@ void invite(char *cmd, int sockfd) {
     }
 
     int numbytes;
-    printf("1\n");
+   
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     char *src = strtok(NULL, " "); //cmd should contain the session id
     printf("src %s\n", src);
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
     printf("invitee %s\n", invitee);
-    printf("2\n");
+
     msg->type = INVITE;
     char *invitation = strcat(invitee,"," );
     invitation = strcat(invitation, src);
 
-    printf("3\n");
     strncpy(msg->data, invitation, MAX_DATA);
     msg->size = strlen(msg->data);
-    printf("4\n");
+
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
 
-    printf("5\n");
+
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
@@ -429,16 +434,27 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-void acceptReq(char* response, char* session, char* user, int sockfd) {
+void acceptReq(char *session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
     }
-
-    int numbytes;
+    char *YorN;
+    printf("Accept Invitation from %s ? (Y/N)", session);
+    scanf("%s", YorN);
+    
     struct message *msg = (struct message *)malloc(sizeof(struct message));
-    msg->type = ACCEPT;
 
+    if(strcmp(YorN,"Y") == 0){
+        msg->type = ACCEPT;
+    } else {
+        return;
+    }
+    
+    int numbytes;
+
+    strncpy(msg->data, session, MAX_DATA);
+    msg->size = strlen(msg->data);
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
 
