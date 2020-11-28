@@ -36,23 +36,26 @@ void *msgRecv(void *arg) {
     struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
     int numbytes;
     while(1) {
-	if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-	    perror("ERROR: recv\n");
-	    return NULL;
-	}
-	if (numbytes == 0) {
-	    continue;
-	}
-	recvMsg = formatString(buff);
-	if (recvMsg->type == MESSAGE) {
-	    printf("%s\n", recvMsg->data);
-	}
-	else if (recvMsg->type == JN_ACK) {
-	    printf("Joined successfully!\n");
-	}
-	else if (recvMsg->type == NS_ACK) {
-	    printf("Added new session and joined successfully!\n");
-	}
+        if ((numbytes = recv(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
+            perror("ERROR: recv\n");
+            return NULL;
+        }
+        if (numbytes == 0) {
+            continue;
+        }
+        recvMsg = formatString(buff);
+        if (recvMsg->type == MESSAGE) {
+            printf("%s\n", recvMsg->data);
+        }
+        else if (recvMsg->type == JN_ACK) {
+            printf("Joined successfully!\n");
+        }
+        else if (recvMsg->type == NS_ACK) {
+            printf("Added new session and joined successfully!\n");
+        }
+        else if (recvMsg.type == INVITE){
+            acceptReq(recvMsg->data, sockfd);
+        }
     }
     return NULL;
 } 
@@ -429,16 +432,26 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-void acceptReq(char* response, char* session, char* user, int sockfd) {
+void acceptReq(char *session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
     }
+    char *YorN;
+    printf("Accept Invitation from %s ? (Y/N)", session);
+    scanf("%s", YofN)
 
+    if(strcmp(YorN,"Y") == 0){
+        msg->type = ACCEPT;
+    } else {
+        return 0;
+    }
+    
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
-    msg->type = ACCEPT;
 
+    strncpy(msg->data, session, MAX_DATA);
+    msg->size = strlen(msg->data);
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
 

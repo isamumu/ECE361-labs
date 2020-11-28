@@ -336,12 +336,9 @@ void *message_handler(void *arg) {
             printf("session: %s\n", src);
 
             // find the socket of the user
-            char *response;
-            response = strcat("Accept invitation to ", src);
-            response = strcat(respMsg->data, "? (Y/N)");
 
             respMsg->type = INVITE;
-            strcpy(respMsg->data, response);
+            strcpy(respMsg->data, src);
             respMsg->size = strlen(respMsg->data);
 
             memset(buff, 0, MAXBUFLEN);
@@ -355,6 +352,7 @@ void *message_handler(void *arg) {
                 fprintf(stderr, "send error\n");
                 return 0;
             }
+
 
         }
         else if (newMsg->type == QUERY) {
