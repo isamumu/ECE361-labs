@@ -233,7 +233,7 @@ void leavesession(char *session, int sockfd) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } else {
-        struct message newMessage;
+        struct message newMessage = (struct message *)malloc(sizeof(struct message));;
         newMessage.type = LEAVE_SESS;
         newMessage.size = 0;
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
@@ -489,7 +489,7 @@ int main(int argc, char **argv){
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
-            sendMsg(sockfd);
+            //sendMsg(sockfd);
         }
 	if(serversock != -1){
 	    struct timeval timeout;
