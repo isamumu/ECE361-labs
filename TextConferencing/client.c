@@ -56,6 +56,7 @@ void *msgRecv(void *arg) {
             printf("Added new session and joined successfully!\n");
         }
         else if (recvMsg->type == INVITE){
+            printf("aya\n");
             acceptReq(recvMsg->data, *sockfd);
         }
     }
