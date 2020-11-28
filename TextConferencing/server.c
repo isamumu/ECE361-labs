@@ -13,6 +13,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <pthread.h>
+
 #include "message.h"
 
 #define BACKLOG 10
@@ -43,15 +44,15 @@ pthread_mutex_t scnt_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ucnt_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //void message_handler(int sockfd, char *msgRecv, int *exited) {
-void message_handler(void *newUser) {
+void *message_handler(void *arg) {
     printf("new thread created\n");
-    newUser = (struct user *)newUser;
-    struct message *recvMsg;// = (struct message *)malloc(sizeof(struct message)); 
+    struct user *newUser = (struct user *)arg;
+    struct message *newMsg;// = (struct message *)malloc(sizeof(struct message)); 
     struct message *respMsg = (struct message *)malloc(sizeof(struct message));
     //newMsg = formatString(msgRecv);
     char buff[BUF_SIZE];
     int numbytes;
-    bool exit = false;
+    bool exited = false;
     bool isLogin = false;
 
 
@@ -69,8 +70,8 @@ void message_handler(void *newUser) {
 	    exited = true;
 	}
 
-	printf("Message recieved: %s\n" buff);
-	recvMsg = formatString(buff);
+	printf("Message recieved: %s\n", buff);
+	newMsg = formatString(buff);
 
 	if (newMsg->type == EXIT) {
 	    printf("Exit recieved\n");
@@ -123,7 +124,7 @@ void message_handler(void *newUser) {
 		respMsg->type = LO_NACK;
 		exited = true;
 		formatMessage(respMsg, buff);
-		if ((numbytes = send(new->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+		if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
 		    perror("ERROR: send\n");
 		    exit(1);
 		}
@@ -169,8 +170,8 @@ void message_handler(void *newUser) {
 		    //strcpy(respMsg->data, "user not found");
                 //}
 
-                if (this_user->sessionID == NULL) {
-                    this_user->sessionID = newMsg->data;
+                if (newUser->sessionID == NULL) {
+                    newUser->sessionID = newMsg->data;
                     respMsg->type = JN_ACK;
                     strncpy(respMsg->data, newMsg->data, MAX_DATA);
                     struct user *myuser = (struct user *)malloc(sizeof(struct user));
@@ -210,14 +211,14 @@ void message_handler(void *newUser) {
 	       //respMsg->type = ;
 	    //}
 	    if (newUser->sessionID != NULL) {
-                //struct session *session_found = findSession(session_list, this_user->sessionID);
+                struct session *session_found = findSession(session_list, newUser->sessionID);
 	        printf("session name: %s\n", newUser->sessionID);
 	        //if (session_found != NULL) {
 	    	   // return;
 	        //}
 	        //this_user->sessionID = NULL;
 		pthread_mutex_lock(&sessions_lock);
-	        removeSessUser(session_found->users, newUser, session_list);
+	        removeSessUser(session_found, newUser, session_list);
 		pthread_mutex_lock(&sessions_lock);
                     //if (session_found->users->user_cnt == -1) {
 		        //printf("session name: %s\n", this_user->sessionID);
@@ -271,7 +272,8 @@ void message_handler(void *newUser) {
             if (newUser->sessionID == NULL) {
 	        struct session *newSession = (struct session *)malloc(sizeof(struct session));
 	        newUser->sessionID = newMsg->data;
-	        struct user *user = (struct user *)malloc(sizeof(struct user));
+	        struct user *myuser = (struct user *)malloc(sizeof(struct user));
+		memcpy((void *)newUser, (void *)myuser, sizeof(struct user));
 	        newSession->sessionName = newMsg->data;
 	        newSession->users = NULL;
 	        //pthread_mutex_lock(sessions_lock);
@@ -293,7 +295,7 @@ void message_handler(void *newUser) {
         
             formatMessage(respMsg, buff);
 
-            if ((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+            if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
                 fprintf(stderr, "ACK error\n");
             }
         
@@ -319,7 +321,7 @@ void message_handler(void *newUser) {
             //}
 	    respMsg->type = MESSAGE;
 	    strcpy(respMsg->data, newMsg->data);
-	    respMsg->size = strlen(respMsg->size);
+	    respMsg->size = strlen(respMsg->data);
 	    formatMessage(respMsg, buff);
 	    struct session *session_found = findSession(session_list, newUser->sessionID);
             //sendToPeers(session_list, newUser , buff, sockfd);
@@ -340,7 +342,7 @@ void message_handler(void *newUser) {
             //send back ACK
 	    printf("QUERY recieved for user: %s\n", newUser->name);
             respMsg->type = QU_ACK;
-            struct user *ptr = user->list;
+            struct user *ptr = user_list;
             //ptr = session_list->next;
             //trcpy(respMsg->data, "hello there");
             //respMsg->size = strlen(respMsg->data);
@@ -394,7 +396,7 @@ void message_handler(void *newUser) {
             formatMessage(respMsg, buff);
         //printf("the string is here %s", buff);
 
-            if((numbytes = send(sockfd, buff, BUF_SIZE - 1, 0)) == -1){
+            if((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1){
                 fprintf(stderr, "ACK error\n");
             }
         }
@@ -411,9 +413,9 @@ void message_handler(void *newUser) {
 	while (ptr != NULL) {
 	    struct user *uptr = ptr->users;
 	    while (uptr != NULL) {
-		pthread_mutex_lock(&session_lock);
-		removeSessUser(uptr, newUser, session_list);
-		pthread_mutex_unlock(&session_lock);
+		pthread_mutex_lock(&sessions_lock);
+		removeSessUser(ptr, newUser, session_list);
+		pthread_mutex_unlock(&sessions_lock);
 	    }
 	    ptr = ptr->next;
 	}
@@ -426,7 +428,7 @@ void message_handler(void *newUser) {
     else {
         printf("Please login\n");
     }
-    return;
+    return NULL;
 }
 
 void list_init(void) {
@@ -545,7 +547,7 @@ int main(int argc, char *argv[]){
 	pthread_mutex_lock(&ucnt_lock);
 	userCount++;
 	pthread_mutex_unlock(&ucnt_lock);
-	pthread_create(&(newUser->thread), NULL, &message_handler, (void *)newUser);
+	pthread_create(&(newUser->thread), NULL, message_handler, (void *)newUser);
 	if (userCount > 0) {
 	    active = true;
 	}
@@ -619,6 +621,6 @@ int main(int argc, char *argv[]){
             }
             printf("server closed\n");
             return 0;
-	}*/
+	}
     }    
-}
+}*/
