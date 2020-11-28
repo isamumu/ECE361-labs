@@ -46,7 +46,7 @@ void *msgRecv(void *arg) {
             continue;
         }
         recvMsg = formatString(buff);
-        printf("type recv: %s\n", recvMsg->type);
+        printf("type buff: %s\n", buff);
         if (recvMsg->type == MESSAGE) {
             printf("%s\n", recvMsg->data);
         }
