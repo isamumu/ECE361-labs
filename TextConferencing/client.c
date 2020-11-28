@@ -411,10 +411,10 @@ void invite(int sockfd) {
     
     msg->type = INVITE;
 
-    char *invitation = strcat("(Y/N) Accept to join ", src);
+    char *invitation = strcat(invitee, ",");
+    invitation = strcat(invitation, src);
     
-    strncpy(msg->data, invitee, MAX_DATA);
-    strncpy(msg->source, src, MAX_DATA);
+    strncpy(msg->data, invitation, MAX_DATA);
     msg->size = strlen(msg->data);
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);

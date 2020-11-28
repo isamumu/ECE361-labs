@@ -327,7 +327,7 @@ void *message_handler(void *arg) {
         }
 
         else if (newMsg->type == INVITE) {
-            printf("invoming invitation from %s", newMsg->source);
+            printf("invoming invitation from %s", newMsg->data);
         }
         else if (newMsg->type == QUERY) {
             //print out the list of user and avaliable sessions
