@@ -27,8 +27,6 @@ struct message {
     unsigned int type;
     unsigned int size;
     unsigned char source[MAX_NAME];
-	unsigned char targetSession[MAX_NAME];
-	unsigned char targetUser[MAX_NAME];
     unsigned char data[MAX_DATA];
 };
 
@@ -146,6 +144,22 @@ struct user *findUser(struct user *head, int fd) {
 	struct user *ptr = head;
 	while (ptr != NULL) {
 		if (ptr->sockfd == fd) {
+			return ptr;
+		}
+		ptr = ptr->next;
+	}
+	printf("findUser: user not found\n");
+	return NULL;
+}
+
+struct user *findUserName(struct user *head, char *name) {
+	if (head == NULL) {
+		printf("findUser: head is null\n");
+		return NULL;
+	}
+	struct user *ptr = head;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) {
 			return ptr;
 		}
 		ptr = ptr->next;

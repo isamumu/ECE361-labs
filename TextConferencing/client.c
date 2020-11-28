@@ -357,7 +357,7 @@ void list(char* session, int sockfd) {
     }
 }
 
-void sendMsg(int sockfd, char *targetSession){
+void sendMsg(int sockfd){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
@@ -369,7 +369,7 @@ void sendMsg(int sockfd, char *targetSession){
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
     // the receiver should based on this target session locate the right socket to send to
-    strncpy(msg->targetSession, targetSession, MAX_DATA);
+
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
     memset(buff, 0, MAXBUFLEN);
@@ -396,21 +396,32 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
-void inviteReq(char* session, char* user, int sockfd) {
+void invite(char *cmd, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
-	printf("Please login to a server before trying to join a session\n");
-	return;
+        printf("Please login to a server before trying to join a session\n");
+        return;
     }
 
     int numbytes;
+    printf("1\n");
     struct message *msg = (struct message *)malloc(sizeof(struct message));
+    char *src = strtok(NULL, " "); //cmd should contain the session id
+    printf("src %s\n", src);
+    char *invitee = strtok(NULL, " "); //cmd should contain the session id
+    printf("invitee %s\n", invitee);
+    printf("2\n");
     msg->type = INVITE;
-    strncpy(msg->targetUser, user, MAX_DATA);
-    strncpy(msg->data, session, MAX_DATA);
+    char *invitation = strcat(invitee,"," );
+    invitation = strcat(invitation, src);
 
-    // the receiver should based on this target session locate the right socket to send to
+    printf("3\n");
+    strncpy(msg->data, invitation, MAX_DATA);
+    msg->size = strlen(msg->data);
+    printf("4\n");
+    memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
 
+    printf("5\n");
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
@@ -427,8 +438,6 @@ void acceptReq(char* response, char* session, char* user, int sockfd) {
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = ACCEPT;
-    strncpy(msg->targetUser, user, MAX_DATA);
-    strncpy(msg->data, response, MAX_DATA);
 
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
@@ -506,10 +515,12 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
             leavesession("all", sockfd);
+            
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
 			createsession(cmd, sockfd);
+
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
 			//list(sockfd);
@@ -518,13 +529,16 @@ int main(int argc, char **argv){
             // terminate the program
 			quit(sockfd);
 			break;
+        
+        } else if (strcmp(cmd, "/invite") == 0) {
+            // terminate the program
+			invite(cmd, sockfd);
 
-		} else{
+		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
-	    
-            sendMsg(sockfd, "all");
+            sendMsg(sockfd);
         }
 	/*
 	if(serversock != -1){
