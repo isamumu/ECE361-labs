@@ -31,9 +31,9 @@ void *get_in_addr(struct sockaddr *sock_arr) {
 
 void acceptReq(char *session, int sockfd) {
     printf("aiyaa\n");
-    
+
     char *YorN;
-    printf("Accept Invitation from %s ? (Y/N)", session);
+    printf("Accept Invitation from %s ? (Y/N)\n", session);
     scanf("%s", YorN);
     
     struct message *msg = (struct message *)malloc(sizeof(struct message));
@@ -48,6 +48,8 @@ void acceptReq(char *session, int sockfd) {
 
     strncpy(msg->data, session, MAX_DATA);
     msg->size = strlen(msg->data);
+    print("Le Session: %s \n", session);
+    print("the message: %s \n", msg->data)
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
 
