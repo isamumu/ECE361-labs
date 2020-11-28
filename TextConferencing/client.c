@@ -408,10 +408,7 @@ void invite(char *cmd, int sockfd) {
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
 
     msg->type = INVITE;
-    char *invitation = strcat(invitee, " has been invited to ");
-    invitation = strcat(invitation, "join src (Y/N)");
-
-    printf("invitation: %s", invitation);
+    char *invitation = strcat(invitee, src);
 
     strncpy(msg->data, invitation, MAX_DATA);
     msg->size = strlen(msg->data);
