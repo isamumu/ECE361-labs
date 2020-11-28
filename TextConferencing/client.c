@@ -33,7 +33,7 @@ void acceptReq(char *session, int sockfd);
 
 void *msgRecv(void *arg) {
     printf("new thread created\n");
-    int *sockfd = (int *)arg;
+    int sockfd = (int *)arg;
     printf("my sockfd: %d\n", *sockfd);
     struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
     int numbytes;
