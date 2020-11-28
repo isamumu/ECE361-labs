@@ -396,19 +396,26 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
-void inviteReq(char* session, char* user, int sockfd) {
+void invite(int sockfd) {
     if (sockfd == INVALID_SOCKET) {
-	printf("Please login to a server before trying to join a session\n");
-	return;
+        printf("Please login to a server before trying to join a session\n");
+        return;
     }
 
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
-    msg->type = INVITE;
-    strncpy(msg->targetUser, user, MAX_DATA);
-    strncpy(msg->data, session, MAX_DATA);
+    char *src = strtok(NULL, " "); //cmd should contain the session id
+    char *invitee = strtok(NULL, " "); //cmd should contain the session id
 
-    // the receiver should based on this target session locate the right socket to send to
+    msg->type = INVITE;
+    char *invitation = strcat(invitee, " has been invited to ");
+    invitation = strcat(invitation, "join src (Y/N)");
+
+    printf("invitation: %s", invitation);
+
+    strncpy(msg->data, invitation, MAX_DATA);
+    msg->size = strlen(msg->data);
+    memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
@@ -520,31 +527,19 @@ int main(int argc, char **argv){
             // terminate the program
 			quit(sockfd);
 			break;
+        
+        } else if (strcmp(cmd, "/invite") == 0) {
+            // terminate the program
+			
+			printf("session name: %s\n", cmd);
+			invite(sockfd);
 
 		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
-	    
             sendMsg(sockfd);
         }
-	/*
-	if(serversock != -1){
-	    struct timeval timeout;
-            timeout.tv_sec = 1;
-            timeout.tv_usec = 999999;
-            // sockopt reconfigures the socket, must be done in order to measure the timeout
-            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
-                printf("failed to configure socket\n");
-	        exit(1);
-            }
-            if ((bytes = recv(serversock, buff, MAXBUFLEN - 1, 0)) == -1) {
-                continue;
-            }
-            //msg = formatString(buff);
-	    printf("data: %s\n", buff);
-            printf("message recieved: %s\n", buff);
-        }*/
     }
 
     fprintf(stdout, "text conference done.\n");
