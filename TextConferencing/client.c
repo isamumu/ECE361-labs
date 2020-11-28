@@ -31,10 +31,7 @@ void *get_in_addr(struct sockaddr *sock_arr) {
 
 void acceptReq(char *session, int sockfd) {
     printf("aiyaa\n");
-    if (sockfd == INVALID_SOCKET) {
-        printf("Please login to a server before trying to join a session\n");
-        return;
-    }
+    
     char *YorN;
     printf("Accept Invitation from %s ? (Y/N)", session);
     scanf("%s", YorN);
