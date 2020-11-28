@@ -281,8 +281,8 @@ void *message_handler(void *arg) {
 	        printf("MESSAGE recieved for user: %s\n", newUser->name);
             //struct user *ptr = user_list;
             
-            char *session = strtok(newMsg->data, "->")
-            char *text = strtok(NULL, "->")
+            // char *session = strtok(newMsg->data, "->");
+            // char *text = strtok(NULL, "->");
 
             struct user *myUser;
             respMsg->type = MESSAGE;
