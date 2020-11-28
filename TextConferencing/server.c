@@ -342,11 +342,11 @@ void *message_handler(void *arg) {
             respMsg->type = INVITE;
             printf("1\n");
             strcpy(respMsg->data, src);
-            printf("2\n");
+            printf("data: %s\n", respMsg->data);
             respMsg->size = strlen(respMsg->data);
             printf("3\n");
             memset(buff, 0, MAXBUFLEN);
-            printf("4\n");
+            printf("buffer: %s\n", buff);
             formatMessage(respMsg, buff);
 
             printf("yoohoo\n");
