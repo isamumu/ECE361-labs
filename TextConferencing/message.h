@@ -19,12 +19,16 @@ enum messageType {
 	MESSAGE,
 	QUERY,
 	QU_ACK,
+	INVITE,
+	ACCEPT
 };
 
 struct message {
     unsigned int type;
     unsigned int size;
     unsigned char source[MAX_NAME];
+	unsigned char targetSession[MAX_NAME];
+	unsigned char targetUser[MAX_NAME];
     unsigned char data[MAX_DATA];
 };
 
@@ -36,6 +40,7 @@ struct user {
     char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
     struct user *next;// = NULL; // NOTE: init to null here
+	struct joinedSessions *mySessions; // keep an up to date list of the joined sessions
     int user_cnt;// = -1; //change on the dummy to 0
 };
 
@@ -391,7 +396,6 @@ void formatMessage(struct message * myPacket, char *packetString) {
 
 	packetString[strlen(packetString)] = 0;
 	//printf("message: %s\n", packetString);
-	
 	
 }
 

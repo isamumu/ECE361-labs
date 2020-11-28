@@ -16,7 +16,7 @@
 #define BYTE_LIMIT 1000
 #define INVALID_SOCKET -1
 
-bool joined = false;
+//bool joined = false;
 char buff[MAXBUFLEN];
 
 int serversock = -1;
@@ -179,7 +179,7 @@ void logout(int sockfd){
         return;
     }
 
-    joined = false;
+    //joined = false;
     close(sockfd);
     sockfd = -1;
     printf("logged out\n");
@@ -193,10 +193,6 @@ void joinsession(char *session, int sockfd) {
         return;
     } else if (sockfd == -1){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
-        return;
-
-    } else if(joined){
-        fprintf(stdout, "can't join multiple sessions");
         return;
 
     } else {
@@ -223,16 +219,16 @@ void joinsession(char *session, int sockfd) {
 
         if (newMessage->type == JN_ACK) {
             fprintf(stdout, "Join Successful!\n");
-            joined = true;
+            //joined = true;
         } else if (newMessage->type == JN_NACK) {
             fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
-            joined = false;
+            //joined = false;
 	}
         return;
     }
 }
 
-void leavesession(int sockfd) {
+void leavesession(char *session, int sockfd) {
     if (sockfd == -1) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
@@ -240,6 +236,7 @@ void leavesession(int sockfd) {
         struct message newMessage;
         newMessage.type = LEAVE_SESS;
         newMessage.size = 0;
+        strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
 
         int bytes;
 
@@ -249,7 +246,7 @@ void leavesession(int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
-	joined = false;
+	//joined = false;
 	printf("leave session success\n");
         return;
     }
@@ -287,13 +284,13 @@ void createsession(char *session, int sockfd) {
         
         if (newMessage->type == NS_ACK) {
             printf("Successfully created and joined session %s.\n", newMessage->data);
-            joined = true;
+            //joined = true;
         }
         return;
     }
 }
 
-void list(int sockfd) {
+void list(char* session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
@@ -301,6 +298,8 @@ void list(int sockfd) {
         struct message *newMessage;
         newMessage->type = QUERY;
         newMessage->size = 0;
+        strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to list
+
         int bytes;
         formatMessage(newMessage, buff);
 
@@ -331,14 +330,17 @@ void sendMsg(int sockfd){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
-    } else if(!joined){
-        fprintf(stdout, "Please login to a session before trying to join a session\n");
-        return;
-    }
+    } 
+    char *targetSession;
+    // stage 1. determine which session if any
+    scanf(“Send message to: %s”, targetSession);
 
+    // stage 2. send message in that session
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
+    msg->targetSession = targetSession;
+    // the receiver should based on this target session locate the right socket to send to
 
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
@@ -364,13 +366,76 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
+void invite(char* session, char* user, int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+	printf("Please login to a server before trying to join a session\n");
+	return;
+    }
+
+    int numbytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+    msg->type = INVITE;
+    strncpy(msg->targetUser, user, MAX_DATA);
+    strncpy(msg->data, session, MAX_DATA);
+
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
+
+void accept(char* response, char* session, char* user, int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+        printf("Please login to a server before trying to join a session\n");
+        return;
+    }
+
+    int numbytes;
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+    msg->type = ACCEPT;
+    strncpy(msg->targetUser, user, MAX_DATA);
+    strncpy(msg->data, response, MAX_DATA);
+
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
+
+/*
+PART 2 Objectives (Client):
+--> Allow  a  client  to join  multiple  sessions.  If  so,  you  should  clearly  indicate  on  the client’s terminal the session identification of every message. 
+------> check joinSession and allow for multiple sessions.
+------> do i need multithreading? I don't think so...
+------> create a new field in user to document which sessions they have joined. ie each user should have a linked list for joined sessions
+--> Implement a procedure for a client to invite other clients into a session. If so, you must provide a protocol for a client to either accept or refuse an invitation
+------> create a protocol similar to lab 1. client1 (join invite) -> server (forward) -> client2 (resp) -> server (forward) -> client1 (Y: joinsession for client2 sock OR N: do nothing)
+
+NOTE: now the client takes in a session field which indicates which session the user wants to leave, list, or send messages at
+
+PART 2 Objectives (Server):
+--> Keep all sessions that theclient joined. If one client could join multiple sessions, you should carefully design the up-to-date list.
+--> If one client could invite other clients into a session, the server should be able to forward the invitation and corresponding messages to the specific clients. 
+--> You may wish to use a timerwith each client, to disconnect clients that have been inactive for a long time.
+*/
+
 // BIG difference, this lab's about TCP not UDP
 int main(int argc, char **argv){
+
     char *cmd; // will store a line of strings separated by spaces   
     int sockfd = INVALID_SOCKET; // init socket value
     int len;
     int bytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
+    
 
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
