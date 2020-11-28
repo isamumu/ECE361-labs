@@ -406,7 +406,9 @@ void invite(char *cmd, int sockfd) {
     printf("1\n");
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     char *src = strtok(NULL, " "); //cmd should contain the session id
+    print("src %s\n", src);
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
+    print("invitee %s\n", invitee);
     printf("2\n");
     msg->type = INVITE;
     char *invitation = strcat(invitee,"," );
