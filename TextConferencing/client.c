@@ -88,6 +88,7 @@ void *msgRecv(void *arg) {
         else if (recvMsg->type == INVITE){
             printf("aya\n");
             acceptReq(recvMsg->data, *sockfd);
+            printf("nani\n");
         }
     }
     return NULL;
