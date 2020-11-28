@@ -330,14 +330,14 @@ void *message_handler(void *arg) {
             // obtain the invited session and the user to invite
             printf("incoming invitation from %s", newMsg->data);
             char *invitee= strtok(newMsg->data, ",");
-            printf("session: %s\n", invitee);
+            printf("invited: %s\n", invitee);
             char *src = strtok(NULL, ",");
-            printf("text: %s\n", src);
+            printf("session: %s\n", src);
 
             // find the socket of the user
             struct user *nominee = findUserName(user_list, invitee);
             printf("nominee is found: %s\n", nominee->name);
-            
+
         }
         else if (newMsg->type == QUERY) {
             //print out the list of user and avaliable sessions
