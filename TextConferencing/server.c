@@ -448,6 +448,8 @@ void list_init(void) {
     return;
 }
 
+
+
 int main(int argc, char *argv[]){
     
     //TODO: create dictionary of user and password
@@ -501,6 +503,8 @@ int main(int argc, char *argv[]){
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE; // use my I
+
+    pthread_t thread_listen, thread_command; 
  
     // obtain IP address 
     if ((numbytes = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
