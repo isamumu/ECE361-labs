@@ -46,7 +46,6 @@ void *msgRecv(void *arg) {
             continue;
         }
         recvMsg = formatString(buff);
-        printf("RECEIVED: %s \n", recvMsg->type);
         if (recvMsg->type == MESSAGE) {
             printf("%s\n", recvMsg->data);
         }
@@ -426,6 +425,7 @@ void invite(char *cmd, int sockfd) {
 
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
+
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
