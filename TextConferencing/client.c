@@ -396,7 +396,7 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
-void invite(int sockfd) {
+void invite(char *cmd, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
