@@ -403,18 +403,22 @@ void invite(char *cmd, int sockfd) {
     }
 
     int numbytes;
+    printf("1\n");
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     char *src = strtok(NULL, " "); //cmd should contain the session id
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
-
+    printf("2\n");
     msg->type = INVITE;
     char *invitation = strcat(invitee, src);
 
+    printf("3\n");
     strncpy(msg->data, invitation, MAX_DATA);
     msg->size = strlen(msg->data);
+    printf("4\n");
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
 
+    printf("5\n");
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
