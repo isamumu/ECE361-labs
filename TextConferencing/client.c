@@ -29,7 +29,36 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
-void acceptReq(char *session, int sockfd);
+void acceptReq(char *session, int sockfd) {
+    if (sockfd == INVALID_SOCKET) {
+        printf("Please login to a server before trying to join a session\n");
+        return;
+    }
+    char *YorN;
+    printf("Accept Invitation from %s ? (Y/N)", session);
+    scanf("%s", YorN);
+    
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+
+    if(strcmp(YorN,"Y") == 0){
+        msg->type = ACCEPT;
+    } else {
+        return;
+    }
+    
+    int numbytes;
+
+    strncpy(msg->data, session, MAX_DATA);
+    msg->size = strlen(msg->data);
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
 
 void *msgRecv(void *arg) {
     printf("new thread created\n");
@@ -435,36 +464,7 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-void acceptReq(char *session, int sockfd) {
-    if (sockfd == INVALID_SOCKET) {
-        printf("Please login to a server before trying to join a session\n");
-        return;
-    }
-    char *YorN;
-    printf("Accept Invitation from %s ? (Y/N)", session);
-    scanf("%s", YorN);
-    
-    struct message *msg = (struct message *)malloc(sizeof(struct message));
 
-    if(strcmp(YorN,"Y") == 0){
-        msg->type = ACCEPT;
-    } else {
-        return;
-    }
-    
-    int numbytes;
-
-    strncpy(msg->data, session, MAX_DATA);
-    msg->size = strlen(msg->data);
-    // the receiver should based on this target session locate the right socket to send to
-    formatMessage(msg, buff);
-
-    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
-        fprintf(stderr, "send error\n");
-        return;
-    }
-    
-}
 
 /*
 PART 2 Objectives (Client):
