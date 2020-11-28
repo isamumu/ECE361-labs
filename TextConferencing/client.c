@@ -527,6 +527,7 @@ int main(int argc, char **argv){
             // terminate the program
 			
 			printf("session name: %s\n", cmd);
+            cmd = strtok(NULL, " "); //cmd should contain the session id
 			invite(cmd, sockfd);
 
 		} else {
