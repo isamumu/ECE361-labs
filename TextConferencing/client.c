@@ -234,8 +234,8 @@ void leavesession(char *session, int sockfd) {
         return;
     } else {
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
-        newMessage.type = LEAVE_SESS;
-        newMessage.size = 0;
+        newMessage->type = LEAVE_SESS;
+        newMessage->size = 0;
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
 
         int bytes;
