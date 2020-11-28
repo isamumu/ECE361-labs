@@ -39,7 +39,7 @@ void acceptReq(char *session, int sockfd) {
     struct message *msg = (struct message *)malloc(sizeof(struct message));
 
     if(strcmp(YorN,"Y") == 0){
-        msg->type = ACCEPT;
+        msg->type = JOIN;
     } else {
         return;
     }
@@ -555,8 +555,10 @@ int main(int argc, char **argv){
 		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
-            buff[len] = ' ';
-            sendMsg(sockfd);
+            if(!(strcmp(cmd, "Y") == 0 || strcmp(cmd, "N") == 0)){
+                buff[len] = ' ';
+                sendMsg(sockfd);
+            }
         }
 	/*
 	if(serversock != -1){
