@@ -362,7 +362,7 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
-void invite(char* session, char* user, int sockfd) {
+void inviteReq(char* session, char* user, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
 	printf("Please login to a server before trying to join a session\n");
 	return;
@@ -384,7 +384,7 @@ void invite(char* session, char* user, int sockfd) {
     
 }
 
-void accept(char* response, char* session, char* user, int sockfd) {
+void acceptReq(char* response, char* session, char* user, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
