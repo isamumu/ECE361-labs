@@ -345,8 +345,8 @@ void *message_handler(void *arg) {
             printf("data: %s\n", respMsg->data);
             respMsg->size = strlen(respMsg->data);
             printf("3\n");
-            memset(buff, 0, MAXBUFLEN);
-            printf("buffer: %s\n", buff);
+            //memset(buff, 0, MAXBUFLEN);
+            //printf("buffer: %s\n", buff);
             formatMessage(respMsg, buff);
 
             printf("yoohoo\n");
