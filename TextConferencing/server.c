@@ -340,13 +340,9 @@ void *message_handler(void *arg) {
             printf("nominee is found: %s\n", nominee->name);
 
             respMsg->type = INVITE;
-            printf("1\n");
             strcpy(respMsg->data, src);
-            printf("data: %s\n", respMsg->data);
             respMsg->size = strlen(respMsg->data);
-            printf("3\n");
             //memset(buff, 0, MAXBUFLEN);
-            printf("buffer: %s\n", buff);
             formatMessage(respMsg, buff);
 
             printf("yoohoo\n");

@@ -46,6 +46,7 @@ void *msgRecv(void *arg) {
             continue;
         }
         recvMsg = formatString(buff);
+        printf("RECEIVED: %s \n", recvMsg->type);
         if (recvMsg->type == MESSAGE) {
             printf("%s\n", recvMsg->data);
         }
@@ -409,25 +410,23 @@ void invite(char *cmd, int sockfd) {
     }
 
     int numbytes;
-    printf("1\n");
+   
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     char *src = strtok(NULL, " "); //cmd should contain the session id
     printf("src %s\n", src);
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
     printf("invitee %s\n", invitee);
-    printf("2\n");
+
     msg->type = INVITE;
     char *invitation = strcat(invitee,"," );
     invitation = strcat(invitation, src);
 
-    printf("3\n");
     strncpy(msg->data, invitation, MAX_DATA);
     msg->size = strlen(msg->data);
-    printf("4\n");
+
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
 
-    printf("5\n");
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
