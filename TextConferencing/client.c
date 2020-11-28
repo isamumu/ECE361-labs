@@ -439,7 +439,7 @@ void acceptReq(char *session, int sockfd) {
     }
     char *YorN;
     printf("Accept Invitation from %s ? (Y/N)", session);
-    scanf("%s", YofN)
+    scanf("%s", YorN);
 
     if(strcmp(YorN,"Y") == 0){
         msg->type = ACCEPT;
