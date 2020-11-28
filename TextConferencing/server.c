@@ -71,7 +71,7 @@ void *message_handler(void *arg) {
 	    exited = true;
 	}
 
-	printf("Message recieved: %s\n", buff);
+	//printf("Message recieved: %s\n", buff);
 	newMsg = formatString(buff);
 
 	if (newMsg->type == EXIT) {
@@ -169,44 +169,40 @@ void *message_handler(void *arg) {
             struct session *session_found = findSession(session_list, newMsg->data);
             if (session_found == NULL) {
                 respMsg->type = JN_NACK;
-		strcpy(respMsg->source, newMsg->data);
-	        strcpy(respMsg->data, "session not find");
+                strcpy(respMsg->source, newMsg->data);
+                strcpy(respMsg->data, "session not find");
             }
-	    else {
+	        else {
                 //struct user *this_user = findUser(user_list, newUser->sockfd);
                 //if (this_user == NULL) {
-                    //respMsg->type = JN_NACK;
-		    //strcpy(respMsg->data, "user not found");
+                //respMsg->type = JN_NACK;
+		        //strcpy(respMsg->data, "user not found");
                 //}
 
-                if (newUser->sessionID == NULL) {
-                    newUser->sessionID = newMsg->data;
-                    respMsg->type = JN_ACK;
-                    strncpy(respMsg->data, newMsg->data, MAX_DATA);
-                    struct user *myuser = (struct user *)malloc(sizeof(struct user));
-                    //newUser->sessionID = this_user->sessionID;
-                    //strncpy(myuser->name, this_user->name, MAX_NAME);
-                    //strncpy(myuser->password, this_user->password, MAX_NAME);
-    	            //myuser->sockfd = this_user->sockfd;
-    	            //myuser->user_cnt = -1;
-    	            //myuser->next = NULL;
-		    memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
-		    pthread_mutex_lock(&sessions_lock);
-                    addUser(&session_found->users, myuser);
-		    pthread_mutex_unlock(&sessions_lock);
-		    printf("user: %s joined session %s\n", newUser->name, newUser->sessionID);
+                newUser->sessionID = newMsg->data;
+                respMsg->type = JN_ACK;
+                strncpy(respMsg->data, newMsg->data, MAX_DATA);
+                struct user *myuser = (struct user *)malloc(sizeof(struct user));
+                //newUser->sessionID = this_user->sessionID;
+                //strncpy(myuser->name, this_user->name, MAX_NAME);
+                //strncpy(myuser->password, this_user->password, MAX_NAME);
+                //myuser->sockfd = this_user->sockfd;
+                //myuser->user_cnt = -1;
+                //myuser->next = NULL;
+                memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
+                pthread_mutex_lock(&sessions_lock);
+                addUser(&session_found->users, myuser);
+                pthread_mutex_unlock(&sessions_lock);
+                printf("user: %s joined session %s\n", newUser->name, newUser->sessionID);
 
-                }
-                else {
-                    respMsg->type = JN_NACK;
-		    strcpy(respMsg->data, "user already joined a session");
-                }
-	    }
+                
+	        }
             formatMessage(respMsg, buff);
 
             if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
                 fprintf(stderr, "ACK error\n");
             }
+
             printSessions(session_list);
             printUsers(user_list);
         }

@@ -506,10 +506,12 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
             leavesession("all", sockfd);
+            
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
 			createsession(cmd, sockfd);
+
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
 			//list(sockfd);
