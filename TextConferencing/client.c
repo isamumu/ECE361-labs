@@ -83,14 +83,23 @@ void *msgRecv(void *arg) {
         else if (recvMsg->type == JN_ACK) {
             printf("Joined successfully!\n");
         }
+	else if (recvMsg->type == JN_NACK) {
+	    printf("Joined Denied: %s\n", recvMsg->data);
+	}
         else if (recvMsg->type == NS_ACK) {
             printf("Added new session and joined successfully!\n");
         }
+	else if (recvMsg->type == QU_ACK) {
+	    fprintf(stdout, "User id & Session ids\n%s", recvMsg->data);
+	}
         else if (recvMsg->type == INVITE){
             printf("aya\n");
             acceptReq(recvMsg->data, *sockfd);
             printf("nani\n");
         }
+	else {
+	    printf("Ignore\n");
+	}
     }
     return NULL;
 } 
@@ -105,26 +114,26 @@ int login(char *cmd, int *sockfd, pthread_t *recv_thread){
     // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
-	printf("%s\n", id);
+	//printf("%s\n", id);
 
 	cmd = strtok(NULL, " ");
 	password = cmd;
-	printf("%s\n", password);
+	//printf("%s\n", password);
 
 	cmd = strtok(NULL, " ");
 	ip = cmd;
-	printf("%s\n", ip);
+	//printf("%s\n", ip);
 
 	cmd = strtok(NULL, " \n");
 	port = cmd;
-	printf("%s\n", port);
+	//printf("%s\n", port);
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
 		return *sockfd;
 
 	}  else if(*sockfd != -1){
-        printf("ERROR: attempted multiple logins");
+        printf("ERROR: attempted multiple logins\n");
         return *sockfd;
 
     } else {
@@ -228,8 +237,8 @@ int login(char *cmd, int *sockfd, pthread_t *recv_thread){
     }
 }
 
-void logout(int sockfd){
-    if(sockfd == -1) {
+void logout(int *sockfd, pthread_t *recv_thread){
+    if(*sockfd == -1) {
         fprintf(stdout, "Currently no logins found.\n");
         return;
     }
@@ -241,15 +250,21 @@ void logout(int sockfd){
 
     formatMessage(msg, buff);
 
-    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+    if((numbytes = send(*sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "logout error\n");
         return;
     }
+    if (pthread_cancel(*recv_thread)) {
+	perror("ERROR: pthread_cancel\n");
+    }
+    else {
+	printf("recv thread exitted\n");
+    }
 
     //joined = false;
-    close(sockfd);
-    sockfd = -1;
-    printf("logged out\n");
+    close(*sockfd);
+    *sockfd = -1;
+    printf("Logout Success!\n");
     return;
 
 }
@@ -297,7 +312,7 @@ void joinsession(char *session, int sockfd) {
 
 void leavesession(char *session, int sockfd) {
     if (sockfd == -1) {
-        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        fprintf(stdout, "Please login to a server before trying to leave a session\n");
         return;
     } else {
 	printf("leaving sessions\n");
@@ -327,7 +342,7 @@ void createsession(char *session, int sockfd) {
         printf("invalid session id, input format: /createsession <session ID>\n");
         return;
     } else if (sockfd == INVALID_SOCKET) {
-        printf("Please login to a server before trying to join a session\n");
+        printf("Please login to a server before trying to create a session\n");
         return;
     } else {
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
@@ -361,9 +376,10 @@ void createsession(char *session, int sockfd) {
 
 void list(char* session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
-        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        fprintf(stdout, "Please login to a server before trying to list\n");
         return;
     } else {
+	printf("requesting listing info\n");
         struct message *newMessage;
         newMessage->type = QUERY;
         newMessage->size = 0;
@@ -371,24 +387,10 @@ void list(char* session, int sockfd) {
 
         int bytes;
         formatMessage(newMessage, buff);
-
+	printf("message sent: %s\n", buff);
         if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
-        }
-
-        if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-			fprintf(stderr, "ERROR: nothing received\n");
-			return;
-		}
-
-        buff[bytes] = 0; // mark end of the string
-        //printf("the buffer %s: \n", buff);
-        newMessage = formatString(buff);
-
-        if (newMessage->type == QU_ACK) {
-            //printf(newMessage->data);
-            fprintf(stdout, "User id & Session ids\n%s", newMessage->source);
         }
 
         return;
@@ -397,7 +399,7 @@ void list(char* session, int sockfd) {
 
 void sendMsg(int sockfd){
     if(sockfd == INVALID_SOCKET){
-        fprintf(stdout, "Please login to a server before trying to join a session\n");
+        fprintf(stdout, "Please login to a server before trying to send a message\n");
         return;
     } 
 
@@ -420,23 +422,33 @@ void sendMsg(int sockfd){
     }
 }
 
-void quit(int sockfd) {
+void quit(int sockfd, pthread_t *recv_thread) {
     if (sockfd == INVALID_SOCKET) {
-	printf("Please login to a server before trying to join a session\n");
+	printf("Please login to a server before trying to quit\n");
 	return;
     }
     memset(buff, 0, BUF_SIZE);
     int numbytes;
+    struct message respMsg;
+    respMsg.type = EXIT;
+    respMsg.size = 0;
+    formatMessage(&respMsg, buff);
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
     }
-    printf("program quitted\n");
+    if (pthread_cancel(*recv_thread)) {
+	perror("ERROR: pthread_cancel\n");
+    }
+    else {
+        printf("program quitted\n");
+    }
+    return;
 }
 
 void invite(char *cmd, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
-        printf("Please login to a server before trying to join a session\n");
+        printf("Please login to a server before trying to invite\n");
         return;
     }
 
@@ -522,8 +534,8 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/logout") == 0) {
             // exit the server
-			logout(sockfd);
-			break;
+			logout(&sockfd, &thread);
+			//break;
 
 		} else if (strcmp(cmd, "/joinsession") == 0) {
             // join the conference session with the given session id
@@ -542,11 +554,11 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
-			//list(sockfd);
+			list("all", sockfd);
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
-			quit(sockfd);
+			quit(sockfd, &thread);
 			break;
         
         } else if (strcmp(cmd, "/invite") == 0) {
@@ -561,23 +573,6 @@ int main(int argc, char **argv){
                 sendMsg(sockfd);
             }
         }
-	/*
-	if(serversock != -1){
-	    struct timeval timeout;
-            timeout.tv_sec = 1;
-            timeout.tv_usec = 999999;
-            // sockopt reconfigures the socket, must be done in order to measure the timeout
-            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&timeout, sizeof(timeout)) == -1) {
-                printf("failed to configure socket\n");
-	        exit(1);
-            }
-            if ((bytes = recv(serversock, buff, MAXBUFLEN - 1, 0)) == -1) {
-                continue;
-            }
-            //msg = formatString(buff);
-	    printf("data: %s\n", buff);
-            printf("message recieved: %s\n", buff);
-        }*/
     }
 
     fprintf(stdout, "text conference done.\n");
