@@ -117,7 +117,7 @@ int login(char *cmd, int sockfd){
         
 	    memset(buff, 0, BUF_SIZE);
         formatMessage(msg, buff);
-        printf("login message formed:\n");
+        printf("login message formed: %s\n", buff);
         serversock = sockfd;
         //print_message(msg);
         if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
