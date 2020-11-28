@@ -353,7 +353,7 @@ void *message_handler(void *arg) {
             int numbytes;
             if((numbytes = send(nominee->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
                 fprintf(stderr, "send error\n");
-                return;
+                return 0;
             }
 
         }
