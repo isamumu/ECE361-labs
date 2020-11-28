@@ -526,7 +526,7 @@ int main(int argc, char **argv){
 			quit(sockfd);
 			break;
 
-		} else if (strcmp(cmd, "/message") == 0){
+		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
