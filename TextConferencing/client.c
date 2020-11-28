@@ -29,7 +29,37 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
-void acceptReq(char *session, int sockfd);
+void acceptReq(char *session, int sockfd) {
+    printf("aiyaa\n");
+
+    char *YorN;
+    printf("Accept Invitation from %s ? (Y/N)\n", session);
+    scanf(" %c", YorN);
+    
+    struct message *msg = (struct message *)malloc(sizeof(struct message));
+
+    if(strcmp(YorN,"Y") == 0){
+        msg->type = JOIN;
+        printf("OK!\n");
+    } else {
+        return;
+    }
+    
+    int numbytes;
+
+    strncpy(msg->data, session, MAX_DATA);
+    msg->size = strlen(msg->data);
+    printf("Le Session: %s \n", session);
+    printf("the message: %s \n", msg->data);
+    // the receiver should based on this target session locate the right socket to send to
+    formatMessage(msg, buff);
+
+    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+        fprintf(stderr, "send error\n");
+        return;
+    }
+    
+}
 
 void *msgRecv(void *arg) {
     printf("new thread created\n");
@@ -46,6 +76,7 @@ void *msgRecv(void *arg) {
             continue;
         }
         recvMsg = formatString(buff);
+        printf("type buff: %s\n", buff);
         if (recvMsg->type == MESSAGE) {
             printf("%s\n", recvMsg->data);
         }
@@ -58,6 +89,7 @@ void *msgRecv(void *arg) {
         else if (recvMsg->type == INVITE){
             printf("aya\n");
             acceptReq(recvMsg->data, *sockfd);
+            printf("nani\n");
         }
     }
     return NULL;
@@ -434,36 +466,7 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-void acceptReq(char *session, int sockfd) {
-    if (sockfd == INVALID_SOCKET) {
-        printf("Please login to a server before trying to join a session\n");
-        return;
-    }
-    char *YorN;
-    printf("Accept Invitation from %s ? (Y/N)", session);
-    scanf("%s", YorN);
-    
-    struct message *msg = (struct message *)malloc(sizeof(struct message));
 
-    if(strcmp(YorN,"Y") == 0){
-        msg->type = ACCEPT;
-    } else {
-        return;
-    }
-    
-    int numbytes;
-
-    strncpy(msg->data, session, MAX_DATA);
-    msg->size = strlen(msg->data);
-    // the receiver should based on this target session locate the right socket to send to
-    formatMessage(msg, buff);
-
-    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
-        fprintf(stderr, "send error\n");
-        return;
-    }
-    
-}
 
 /*
 PART 2 Objectives (Client):
@@ -553,8 +556,10 @@ int main(int argc, char **argv){
 		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
-            buff[len] = ' ';
-            sendMsg(sockfd);
+            if(!(strcmp(cmd, "Y") == 0 || strcmp(cmd, "N") == 0)){
+                buff[len] = ' ';
+                sendMsg(sockfd);
+            }
         }
 	/*
 	if(serversock != -1){
