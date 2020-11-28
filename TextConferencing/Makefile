@@ -2,10 +2,10 @@ TARGET = server client
 all: ${TARGET}
 
 server: server.c message.h 
-	gcc -o server server.c
+	gcc -pthread -o server server.c
 
 client: client.c message.h
-	gcc -o client client.c
+	gcc -pthread -o client client.c
 
 clean:
 	rm -f ${TARGET}
