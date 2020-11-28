@@ -402,11 +402,13 @@ void invite(int sockfd) {
         return;
     }
 
+    printf("hello entered invite function\n");
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     char *src = strtok(NULL, " "); //cmd should contain the session id
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
-
+    printf("finished parsing\n");
+    
     msg->type = INVITE;
 
     char *invitation = strcat("(Y/N) Accept to join ", src);
