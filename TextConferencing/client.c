@@ -233,14 +233,14 @@ void leavesession(char *session, int sockfd) {
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } else {
-        struct message newMessage;
-        newMessage.type = LEAVE_SESS;
-        newMessage.size = 0;
+        struct message *newMessage = (struct message *)malloc(sizeof(struct message));
+        newMessage->type = LEAVE_SESS;
+        newMessage->size = 0;
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
 
         int bytes;
 
-        formatMessage(&newMessage, buff);
+        formatMessage(newMessage, buff);
 
         if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
@@ -326,22 +326,18 @@ void list(char* session, int sockfd) {
     }
 }
 
-void sendMsg(int sockfd){
+void sendMsg(int sockfd, char *targetSession){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } 
-    char *targetSession;
-    // stage 1. determine which session if any
-    scanf(“Send message to: %s”, targetSession);
 
     // stage 2. send message in that session
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
-    msg->targetSession = targetSession;
     // the receiver should based on this target session locate the right socket to send to
-
+    strncpy(msg->targetSession, targetSession, MAX_DATA);
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
     formatMessage(msg, buff);
@@ -366,7 +362,7 @@ void quit(int sockfd) {
     printf("program quitted\n");
 }
 
-void invite(char* session, char* user, int sockfd) {
+void inviteReq(char* session, char* user, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
 	printf("Please login to a server before trying to join a session\n");
 	return;
@@ -388,7 +384,7 @@ void invite(char* session, char* user, int sockfd) {
     
 }
 
-void accept(char* response, char* session, char* user, int sockfd) {
+void acceptReq(char* response, char* session, char* user, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
@@ -474,14 +470,14 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
-            leavesession(sockfd);
+            //leavesession(sockfd);
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
 			createsession(cmd, sockfd);
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
-			list(sockfd);
+			//list(sockfd);
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
@@ -492,7 +488,7 @@ int main(int argc, char **argv){
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
-            sendMsg(sockfd);
+            //sendMsg(sockfd);
         }
 	if(serversock != -1){
 	    struct timeval timeout;
