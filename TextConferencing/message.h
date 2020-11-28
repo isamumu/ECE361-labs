@@ -152,6 +152,22 @@ struct user *findUser(struct user *head, int fd) {
 	return NULL;
 }
 
+struct user *findUserName(struct user *head, char *name) {
+	if (head == NULL) {
+		printf("findUser: head is null\n");
+		return NULL;
+	}
+	struct user *ptr = head;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) {
+			return ptr;
+		}
+		ptr = ptr->next;
+	}
+	printf("findUser: user not found\n");
+	return NULL;
+}
+
 void removeSession(struct session **head, char *sessName) {
 	if (*head == NULL) {
 		printf("removeSession: head is null\n");
