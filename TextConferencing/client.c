@@ -409,7 +409,8 @@ void invite(char *cmd, int sockfd) {
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
     printf("2\n");
     msg->type = INVITE;
-    char *invitation = strcat(invitee, src);
+    char *invitation = strcat(invitee,"," );
+    invitation = strcat(invitation, src);
 
     printf("3\n");
     strncpy(msg->data, invitation, MAX_DATA);
