@@ -67,19 +67,19 @@ int login(char *cmd, int *sockfd, pthread_t *recv_thread){
     // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
-	//printf("%s\n", id);
+	printf("%s\n", id);
 
 	cmd = strtok(NULL, " ");
 	password = cmd;
-	//printf("%s\n", password);
+	printf("%s\n", password);
 
 	cmd = strtok(NULL, " ");
 	ip = cmd;
-	//printf("%s\n", ip);
+	printf("%s\n", ip);
 
 	cmd = strtok(NULL, " \n");
 	port = cmd;
-	//printf("%s\n", port);
+	printf("%s\n", port);
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
@@ -357,22 +357,21 @@ void list(char* session, int sockfd) {
     }
 }
 
-void sendMsg(int sockfd){
+void sendMsg(int sockfd, char *targetSession){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } 
 
-
+    // stage 2. send message in that session
+    printf("sending message: %s\n", buff);
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
-
     // the receiver should based on this target session locate the right socket to send to
     strncpy(msg->targetSession, targetSession, MAX_DATA);
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
-
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
     printf("message sent: %s\n", buff);
@@ -507,7 +506,7 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
             leavesession("all", sockfd);
-
+            
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
@@ -522,12 +521,12 @@ int main(int argc, char **argv){
 			quit(sockfd);
 			break;
 
-		} else {
+		} else{
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
 	    
-            sendMsg(sockfd);
+            sendMsg(sockfd, "all");
         }
 	/*
 	if(serversock != -1){
