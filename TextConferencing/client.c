@@ -29,6 +29,8 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
+void acceptReq(char *session, int sockfd);
+
 void *msgRecv(void *arg) {
     printf("new thread created\n");
     int *sockfd = (int *)arg;
@@ -432,7 +434,7 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-void acceptReq(char *session, int sockfd) {
+acceptReq(char *session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
