@@ -434,7 +434,7 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-acceptReq(char *session, int sockfd) {
+void acceptReq(char *session, int sockfd) {
     if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
