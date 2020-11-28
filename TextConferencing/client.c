@@ -34,7 +34,13 @@ void acceptReq(char *session, int sockfd) {
 
     char *YorN;
     printf("Accept Invitation from %s ? (Y/N)\n", session);
-    scanf("%s", YorN);
+
+
+    fgets(buff, MAXBUFLEN - 1, stdin); 
+    // TODO: CHECK buff reset
+    buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0
+    YorN = buff; 
+        
     
     struct message *msg = (struct message *)malloc(sizeof(struct message));
 
