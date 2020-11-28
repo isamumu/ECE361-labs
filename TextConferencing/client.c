@@ -29,11 +29,11 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
-void acceptReq(char *session, int sockfd);
+void acceptReq(char *session, int *sockfd);
 
 void *msgRecv(void *arg) {
     printf("new thread created\n");
-    int sockfd = (int *)arg;
+    int *sockfd = (int *)arg;
     printf("my sockfd: %d\n", *sockfd);
     struct message *recvMsg = (struct message *)malloc(sizeof(struct message));
     int numbytes;
@@ -434,8 +434,8 @@ void invite(char *cmd, int sockfd) {
     
 }
 
-acceptReq(char *session, int sockfd) {
-    if (sockfd == INVALID_SOCKET) {
+acceptReq(char *session, int *sockfd) {
+    if (&sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to join a session\n");
         return;
     }
@@ -458,7 +458,7 @@ acceptReq(char *session, int sockfd) {
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
 
-    if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+    if((numbytes = send(&sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
     }
