@@ -240,7 +240,7 @@ void leavesession(char *session, int sockfd) {
 
         int bytes;
 
-        formatMessage(&newMessage, buff);
+        formatMessage(newMessage, buff);
 
         if ((bytes = send(sockfd, buff, MAXBUFLEN, 0)) == -1) {
             fprintf(stdout, "ERROR: send() failed\n");
@@ -336,9 +336,8 @@ void sendMsg(int sockfd, char *targetSession){
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
-    msg->targetSession = targetSession;
     // the receiver should based on this target session locate the right socket to send to
-
+    strncpy(msg->targetSession, targetSession, MAX_DATA);
     strncpy(msg->data, buff, MAX_DATA);
     msg->size = strlen(msg->data);
     formatMessage(msg, buff);
