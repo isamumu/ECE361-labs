@@ -67,19 +67,19 @@ int login(char *cmd, int *sockfd, pthread_t *recv_thread){
     // extraect the above components from cmd
     cmd = strtok(NULL, " ");
 	id = cmd;
-	printf("%s\n", id);
+	//printf("%s\n", id);
 
 	cmd = strtok(NULL, " ");
 	password = cmd;
-	printf("%s\n", password);
+	//printf("%s\n", password);
 
 	cmd = strtok(NULL, " ");
 	ip = cmd;
-	printf("%s\n", ip);
+	//printf("%s\n", ip);
 
 	cmd = strtok(NULL, " \n");
 	port = cmd;
-	printf("%s\n", port);
+	//printf("%s\n", port);
 
     if (id == NULL || password == NULL || ip == NULL || port == NULL) {
 		printf("login format: /login <client_id> <password> <server_ip> <server_port>\n");
@@ -506,7 +506,7 @@ int main(int argc, char **argv){
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
             leavesession("all", sockfd);
-            
+
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
 			cmd = strtok(NULL, " "); //cmd should contain the session id
