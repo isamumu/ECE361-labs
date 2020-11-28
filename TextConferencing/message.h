@@ -38,7 +38,7 @@ struct user {
     char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
     struct user *next;// = NULL; // NOTE: init to null here
-	struct joinedSessions *mySessions; // keep an up to date list of the joined sessions
+    struct joinedSessions *mySessions; // keep an up to date list of the joined sessions
     int user_cnt;// = -1; //change on the dummy to 0
 };
 
@@ -256,35 +256,6 @@ void removeSessUser(struct session *sessLeave, struct user *usr, struct session 
 	}
 	return;
 }
-
-/*void removeUser_fd(struct user *head, int fd) {
-	if (head == NULL) {
-		printf("removeUser: head is null\n");
-		return;
-	}
-	head->user_cnt -= 1;
-	struct user *ptr = head;
-	if (ptr->sockfd == fd) {
-		head->next->user_cnt = head->user_cnt;
-		head = head->next;
-		free(ptr);
-		return;
-	}
-
-	struct user *pptr = head->next;
-	while (pptr != NULL) {
-		if (pptr->sockfd == fd) {
-			ptr->next = pptr->next;
-			pptr->next = NULL;
-			free(pptr);
-			return;
-		}
-		pptr = pptr->next;
-		ptr = ptr->next;
-	}
-	printf("removeUser: user not found / not logged in\n");
-	return;
-}*/
 
 void printUser(struct user *curr) {
 	if (curr == NULL) {

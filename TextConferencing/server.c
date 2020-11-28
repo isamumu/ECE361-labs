@@ -424,7 +424,7 @@ void *message_handler(void *arg) {
 	//printf("end of loop\n");
 	//printUser(newUser);
     }
-    printf("socket exit??\n");
+    printf("user: %s ", newUser->name);
     close(newUser->sockfd);
     if (isLogin) {
 	pthread_mutex_lock(&users_lock);
@@ -433,7 +433,7 @@ void *message_handler(void *arg) {
 	struct session *ptr = session_list;
 	while (ptr != NULL) {
 	    struct user *uptr = ptr->users;
-	    while (uptr != NULL) {
+	    if (uptr != NULL) {
 		pthread_mutex_lock(&sessions_lock);
 		removeSessUser(ptr, newUser, &session_list);
 		pthread_mutex_unlock(&sessions_lock);
@@ -441,10 +441,11 @@ void *message_handler(void *arg) {
 	    ptr = ptr->next;
 	}
 
-	free(newUser);
+	//free(newUser);
 	pthread_mutex_lock(&ucnt_lock);
 	userCount--;
 	pthread_mutex_unlock(&ucnt_lock);
+	printf("successfully quitted the program\n");
     }
     else {
         printf("Please login\n");
