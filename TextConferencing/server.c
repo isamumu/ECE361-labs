@@ -336,8 +336,8 @@ void *message_handler(void *arg) {
             printf("session: %s\n", src);
 
             // find the socket of the user
-            char *respMsg = strcat("Accept invitation to ", src);
-            respMsg = strcat(respMsg, "? (Y/N)");
+            respMsg->data = strcat("Accept invitation to ", src);
+            respMsg->data = strcat(respMsg->data, "? (Y/N)");
 
             memset(buff, 0, MAXBUFLEN);
             formatMessage(respMsg, buff);
