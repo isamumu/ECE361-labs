@@ -335,8 +335,20 @@ void *message_handler(void *arg) {
             printf("session: %s\n", src);
 
             // find the socket of the user
+            char *respMsg = strcat("Accept invitation to ", src);
+            respMsg = strcat(respMsg, "? (Y/N)");
+
+            memset(buff, 0, MAXBUFLEN);
+            formatMessage(respMsg, buff);
+
             struct user *nominee = findUserName(user_list, invitee);
             printf("nominee is found: %s\n", nominee->name);
+
+            int numbytes;
+            if((numbytes = send(nominee->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+                fprintf(stderr, "send error\n");
+                return;
+            }
 
         }
         else if (newMsg->type == QUERY) {
