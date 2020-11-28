@@ -40,7 +40,7 @@ void acceptReq(char *session, int sockfd) {
 
     if(strcmp(YorN,"Y") == 0){
         msg->type = JOIN;
-        printf("OK!\n")
+        printf("OK!\n");
     } else {
         return;
     }
