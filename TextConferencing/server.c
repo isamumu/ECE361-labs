@@ -282,7 +282,7 @@ void *message_handler(void *arg) {
             //struct user *ptr = user_list;
             
             char *targetSession = strtok(newMsg->data, ",");
-            printf("session: %s\n", session);
+            printf("session: %s\n", targetSession);
             char *text = strtok(NULL, ",");
             printf("text: %s\n", text);
 

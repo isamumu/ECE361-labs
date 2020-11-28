@@ -376,11 +376,6 @@ void sendMsg(int sockfd){
     formatMessage(msg, buff);
     printf("message sent: %s\n", buff);
 
-    char *session = strtok(msg->data, ",");
-    printf("session: %s\n", session);
-    char *text = strtok(NULL, ",");
-    printf("text: %s\n", text);
-
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
