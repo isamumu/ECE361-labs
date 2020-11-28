@@ -326,14 +326,11 @@ void list(char* session, int sockfd) {
     }
 }
 
-void sendMsg(int sockfd){
+void sendMsg(int sockfd, char *targetSession){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } 
-    char *targetSession;
-    // stage 1. determine which session if any
-    scanf(“Send message to: %s”, targetSession);
 
     // stage 2. send message in that session
     int numbytes;
