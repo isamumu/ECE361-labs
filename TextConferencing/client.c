@@ -508,7 +508,7 @@ int main(int argc, char **argv){
             }
             //msg = formatString(buff);
 	    printf("data: %s\n", buff);
-            printf("message recieved: %s", buff);
+            printf("message recieved: %s\n", buff);
         }
     } 
 
