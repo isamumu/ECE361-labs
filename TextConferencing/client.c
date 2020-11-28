@@ -357,24 +357,32 @@ void list(char* session, int sockfd) {
     }
 }
 
-void sendMsg(int sockfd, char *targetSession){
+void sendMsg(char *cmd, int sockfd){
     if(sockfd == INVALID_SOCKET){
         fprintf(stdout, "Please login to a server before trying to join a session\n");
         return;
     } 
 
-    // stage 2. send message in that session
-    printf("sending message: %s\n", buff);
+    cmd = strtok(NULL, " ");
+	char *targetSession = cmd;
+	//printf("%s\n", id);
+
+	cmd = strtok(NULL, " ");
+	char *text = cmd;
+
     int numbytes;
     struct message *msg = (struct message *)malloc(sizeof(struct message));
     msg->type = MESSAGE;
+
     // the receiver should based on this target session locate the right socket to send to
     strncpy(msg->targetSession, targetSession, MAX_DATA);
-    strncpy(msg->data, buff, MAX_DATA);
+    strncpy(msg->data, text, MAX_DATA);
     msg->size = strlen(msg->data);
+
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
     printf("message sent: %s\n", buff);
+    print("SENDING TO: %s", msg->data);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
@@ -521,12 +529,12 @@ int main(int argc, char **argv){
 			quit(sockfd);
 			break;
 
-		} else{
+		} else {
             // send a message to the current conference session. The message
             // is sent after the new line
             buff[len] = ' ';
 	    
-            sendMsg(sockfd, "all");
+            sendMsg(cmd, sockfd);
         }
 	/*
 	if(serversock != -1){
