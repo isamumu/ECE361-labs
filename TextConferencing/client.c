@@ -382,7 +382,7 @@ void sendMsg(char *cmd, int sockfd){
     memset(buff, 0, MAXBUFLEN);
     formatMessage(msg, buff);
     printf("message sent: %s\n", buff);
-    print("SENDING TO: %s", msg->data);
+    printf("SENDING TO: %s", msg->data);
 
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
