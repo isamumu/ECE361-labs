@@ -49,7 +49,7 @@ void acceptReq(char *session, int sockfd) {
     strncpy(msg->data, session, MAX_DATA);
     msg->size = strlen(msg->data);
     print("Le Session: %s \n", session);
-    print("the message: %s \n", msg->data)
+    print("the message: %s \n", msg->data);
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
 
