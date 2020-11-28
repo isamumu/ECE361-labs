@@ -19,6 +19,7 @@
 #define BACKLOG 10
 #define SESSION_SIZE 10
 #define USER_SIZE 10
+#define MAXBUFLEN 4096
 
 // 1. create linked list of dummy users (5 sessions, 5 users per session)
 // 2. implement functions to add and remove users from the linked list
