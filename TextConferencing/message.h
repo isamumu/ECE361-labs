@@ -23,7 +23,8 @@ enum messageType {
 	ACCEPT,
 	INV_NACK_U,
 	INV_NACK_S,
-	TIMEOUT
+	TIMEOUT,
+	NS_NACK
 };
 
 struct message {

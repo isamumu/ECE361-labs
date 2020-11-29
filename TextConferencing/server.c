@@ -120,6 +120,11 @@ void *message_handler(void *arg) {
                 } 
 	        else {
                     respMsg->type = LO_NACK;
+		    memset(respMsg->data, 0, MAX_DATA);
+                    char tmp[100] = "Wrong username or password";
+                    strcpy(respMsg->data, tmp);
+                    respMsg->size = strlen(respMsg->data);
+                    printf("message sent: %s\n", respMsg->data);
 		    exited = true;
                 }
 
@@ -140,6 +145,11 @@ void *message_handler(void *arg) {
             }
 	    else {
 		respMsg->type = LO_NACK;
+		memset(respMsg->data, 0, MAX_DATA);
+                char tmp[100] = "Please login first";
+                strcpy(respMsg->data, tmp);
+                respMsg->size = strlen(respMsg->data);
+                printf("message sent: %s\n", respMsg->data);
 		exited = true;
 		formatMessage(respMsg, buff);
 		if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
@@ -178,8 +188,11 @@ void *message_handler(void *arg) {
             struct session *session_found = findSession(session_list, newMsg->data);
             if (session_found == NULL) {
                 respMsg->type = JN_NACK;
-                strcpy(respMsg->source, newMsg->data);
-                strcpy(respMsg->data, "session not find");
+                memset(respMsg->data, 0, MAX_DATA);
+                char tmp[100] = "Session not found";
+                strcpy(respMsg->data, tmp);
+                respMsg->size = strlen(respMsg->data);
+                printf("message sent: %s\n", respMsg->data);
             }
 	        else {
 
@@ -224,13 +237,13 @@ void *message_handler(void *arg) {
         } 
         else if (newMsg->type == NEW_SESS) {
             printf("NEW_SESS recieved for user: %s\n", newUser->name);
-           
-            if (newUser->sessionID == NULL) {
-		print_message(newMsg);
-		newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
-		strcpy(newUser->sessionID, newMsg->data);
-	    }
-	    //if (newUser->sessionID == NULL) {
+            struct session *session_found = findSession(session_list, newMsg->data);
+	    if (session_found == NULL) {
+                if (newUser->sessionID == NULL) {
+		    print_message(newMsg);
+		    newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
+		    strcpy(newUser->sessionID, newMsg->data);
+	        }
 	        struct session *newSession = (struct session *)malloc(sizeof(struct session));
                 print_message(newMsg);
                 //newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
@@ -256,7 +269,15 @@ void *message_handler(void *arg) {
             	printSessions(session_list); //check
                 respMsg->type = NS_ACK;
 	        strcpy(respMsg->data, newUser->sessionID);
-            //}
+	    }
+	    else {
+		respMsg->type = NS_NACK;
+		memset(respMsg->data, 0, MAX_DATA);
+                char tmp[100] = "Session already exist";
+                strcpy(respMsg->data, tmp);
+                respMsg->size = strlen(respMsg->data);
+                printf("message sent: %s\n", respMsg->data);
+	    }
         
             formatMessage(respMsg, buff);
 
