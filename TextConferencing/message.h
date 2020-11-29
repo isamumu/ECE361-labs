@@ -20,7 +20,9 @@ enum messageType {
 	QUERY,
 	QU_ACK,
 	INVITE,
-	ACCEPT
+	ACCEPT,
+	INV_NACK_U,
+	INV_NACK_S
 };
 
 struct message {
