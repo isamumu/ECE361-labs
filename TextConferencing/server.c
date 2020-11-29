@@ -400,7 +400,9 @@ void *message_handler(void *arg) {
                 while(people != NULL){
                     if(people->name != NULL){
                         strcat(data, people->name);
-                        strcat(data, ", ");
+                        if(people->next != NULL){
+                            strcat(data, ", ");
+                        }
                     }
                     people = people->next;
                 }
