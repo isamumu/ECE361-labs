@@ -56,6 +56,7 @@ void *message_handler(void *arg) {
     int numbytes;
     bool exited = false;
     bool isLogin = false;
+    bool istimeout = false;
 
 
     // TODO after creating linked list functions, implement 
@@ -64,9 +65,15 @@ void *message_handler(void *arg) {
 
     while (1) {
 	memset(buff, 0, BUF_SIZE);
+	//timer
+        struct timeval timeout;
+        timeout.tv_sec = 600; //10mins
+        timeout.tv_usec = 0;
+        setsockopt(newUser->sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, sizeof(timeout));
 	if ((numbytes = recv(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
-	    perror("ERROR: recv\n");
-	    exit(1);
+	    istimeout = true;
+	    perror("ERROR: recv");
+	    break;
 	}
         if (numbytes == 0) {
 	    exited = true;
@@ -418,6 +425,15 @@ void *message_handler(void *arg) {
 	}
     }
     printf("user: %s ", newUser->name);
+    if (istimeout) {
+	respMsg->type = TIMEOUT;
+	respMsg->size = 0;
+	formatMessage(respMsg, buff);
+	if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+	    perror("ERROR: send ");
+	}
+    }
+
     close(newUser->sockfd);
     if (isLogin) {
 	pthread_mutex_lock(&users_lock);
@@ -443,6 +459,7 @@ void *message_handler(void *arg) {
     else {
         printf("Please login\n");
     }
+    isLogin = false;
     return NULL;
 }
 
@@ -499,17 +516,11 @@ int main(int argc, char *argv[]){
     int sockfd, userfd;
     int numbytes; 
     socklen_t clilen, addr_size;
-    //fd_set master;
-   // fd_set read_fds;
-    //int fdmax;
     int connection, other_connection;
     bool quit = false;
     int exited = 0;
 
     int yes = 1;
-    //list_init();
-    //FD_ZERO(&master);
-    //FD_ZERO(&read_fds);
     
     char * port = argv[1]; // get the port 
      
@@ -547,13 +558,17 @@ int main(int argc, char *argv[]){
     //finished with finding the IP address
     freeaddrinfo(servinfo);
 
+    //timer
+    /*struct timeval timeout;
+    timeout.tv_sec = 600; //10mins
+    timeout.tv_usec = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, sizeof(timeout));*/
+
     if ((numbytes = listen(sockfd, BACKLOG)) == -1) {
         perror("server: listen");
         exit(1);
     }
 
-    //FD_SET(sockfd, &master);
-    //fdmax = sockfd;
     printf("one moment please.....\n");
     bool active = true; //the active bool stays true when the userCount > 0
     while(active) {
@@ -578,68 +593,3 @@ int main(int argc, char *argv[]){
     close(sockfd);
     return 0;
 }
-        /*memset(buffer, 0, BUF_SIZE);
-        read_fds = master;
-        if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1 ) {
-            perror("select");
-            exit(1);
-        }
-
-        for (connection = 0; connection <= fdmax; connection++) {
-	        
-            //printf("connection: %d\n", connection);
-            if (FD_ISSET(connection, &read_fds)) {
-                if (connection == sockfd) {
-                    //new connection recieved
-                    addr_size = sizeof(client_sock);
-                    if ((userfd = accept(sockfd, (struct sockaddr *)&client_sock, &addr_size)) == -1) {
-                        perror("ERROR: accept");
-                    }
-                    else {
-                        FD_SET(userfd, &master);
-                        if (userfd > fdmax) {
-                            fdmax = userfd;
-                        }
-                        printf("new connection made on socket %d current fdmax: %d\n", userfd, fdmax);
-                    }
-
-                }
-                else {
-		            //printf("message recieved from socket %d\n", connection);
-                    if ((numbytes = recv(connection, buffer, BUF_SIZE, 0)) == -1) {
-                        perror("ERROR: recv");
-                        close(connection);
-                        FD_CLR(connection, &master);
-                    }
-                    if (numbytes == 0) {
-                        printf("ignore socket %d\n", connection);
-                        close(connection);
-                        FD_CLR(connection, &master);
-                        quit = true;
-                        break;
-                    }
-                    else {
-			printf("going through message_handler: %s\n", buffer);
-                        message_handler(connection, buffer, &exited);
-			if (exited == 1) {
-				close(connection);
-				FD_CLR(connection, &master);
-				exited = 0;
-		    	}
-                    }
-                }
-            }
-        }
-	if (quit == true) {
-	    for (connection = 0; connection <= fdmax; connection++) {
-	        if (FD_ISSET(connection, &master)) {
-	            printf("ignore socket %d\n", connection);
-                    close(connection);
-	            FD_CLR(connection, &master);
-	        }
-            }
-            printf("server closed\n");
-            return 0;
-	}
-    }    
-}*/
