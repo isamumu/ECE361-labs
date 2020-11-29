@@ -270,52 +270,84 @@ void *message_handler(void *arg) {
         else if (newMsg->type == MESSAGE) {
             //check the session that the sender is in
             //send the message to everyone (every sockfd) in the sockfdlist of that session
-	        printf("MESSAGE recieved for user: %s\n", newUser->name);
+	    printf("MESSAGE recieved for user: %s\n", newUser->name);
             //struct user *ptr = user_list;
             
             char *targetSession = strtok(newMsg->data, ",");
-            printf("session: %s\n", targetSession);
+            //printf("session: %s\n", targetSession);
             char *text = strtok(NULL, ",");
-            printf("text: %s\n", text);
-
-            struct user *myUser;
-            respMsg->type = MESSAGE;
-            strcpy(respMsg->data, text);
-            respMsg->size = strlen(respMsg->data);
-            //formatMessage(respMsg, buff);
-            //struct session *session_found = findSession(session_list, newUser->sessionID);
-            if (newUser->sessionID == NULL) {
-                memset(respMsg->data, 0, MAX_DATA);
-                char tmp[100] = "no Session Joined";
+	    respMsg->type = MESSAGE;
+            //printf("text: %s\n", text);
+	    if (text == NULL) {
+		memset(respMsg->data, 0, MAX_DATA);
+                char tmp[100] = "Wrong format <session>,<message>";
                 strcpy(respMsg->data, tmp);
                 respMsg->size = strlen(respMsg->data);
                 formatMessage(respMsg, buff);
                 printf("message sent: %s\n", respMsg->data);
-                printf("user not joined in session\n");
+                printf("wrong format\n");
 
                 if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
                     perror("ERROR: send\n");
                     exit(1);
                 }
-            }
-            else {
-                 
-                // locate the session and its users
+	    }
+	    else {
+                struct user *myUser;
+                strcpy(respMsg->data, text);
+                respMsg->size = strlen(respMsg->data);
+                //formatMessage(respMsg, buff);
                 struct session *session_found = findSession(session_list, targetSession);
-                formatMessage(respMsg, buff);
-                struct user *ptr = session_found->users;
-                printf("message: %s\n", respMsg->data);
+                if (session_found == NULL) {
+                    memset(respMsg->data, 0, MAX_DATA);
+                    char tmp[100] = "Wrong Session name";
+                    strcpy(respMsg->data, tmp);
+                    respMsg->size = strlen(respMsg->data);
+                    formatMessage(respMsg, buff);
+                    printf("message sent: %s\n", respMsg->data);
+                    printf("wrong session name\n");
 
-                // send to every user in the session
-                while(ptr != NULL) {
-                    printf("sending message to user %s\n", ptr->name);
-                    if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+                    if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
                         perror("ERROR: send\n");
                         exit(1);
                     }
-                    ptr = ptr->next;
                 }
-            }
+                else {
+                    struct user *isRegister = findUser(session_found->users, newUser->sockfd);
+		    if (isRegister == NULL) {
+		        memset(respMsg->data, 0, MAX_DATA);
+                        char tmp[100] = "Not joined in the Session, please join first";
+                        strcpy(respMsg->data, tmp);
+                        respMsg->size = strlen(respMsg->data);
+                        formatMessage(respMsg, buff);
+                        printf("message sent: %s\n", respMsg->data);
+                        printf("not joined\n");
+
+                        if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+                            perror("ERROR: send\n");
+                            exit(1);
+                        }
+		    }
+		    else {
+                        // locate the session and its users
+                        formatMessage(respMsg, buff);
+                        struct user *ptr = session_found->users;
+                        printf("message: %s\n", respMsg->data);
+
+                        // send to every user in the session
+                        while(ptr != NULL) {
+		            if (ptr->sockfd != newUser->sockfd) {
+                                printf("sending message to user %s\n", ptr->name);
+                                if ((numbytes = send(ptr->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+                                    perror("ERROR: send\n");
+                                    exit(1);
+                                }
+		            }
+                            ptr = ptr->next;
+                        }
+		    }
+                }
+	    }
         }
 
         else if (newMsg->type == INVITE) {
@@ -552,7 +584,7 @@ int main(int argc, char *argv[]){
 
     //timer
     struct timeval timeout;
-    timeout.tv_sec = 30; //10mins
+    timeout.tv_sec = 600; //10mins
     timeout.tv_usec = 0;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, sizeof(timeout));
 
