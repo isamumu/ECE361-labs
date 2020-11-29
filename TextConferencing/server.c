@@ -329,30 +329,51 @@ void *message_handler(void *arg) {
 
         else if (newMsg->type == INVITE) {
             // obtain the invited session and the user to invite
-            printf("incoming invitation from %s\n", newMsg->data);
-            char *invitee= strtok(newMsg->data, ",");
-            printf("invited: %s\n", invitee);
-            char *src = strtok(NULL, ",");
-            printf("session: %s\n", src);
+            printf("incoming invitation from %s\n", newUser->name);
+            //char *invitee= strtok(newMsg->data, ",");
+            printf("invited: %s\n", newMsg->source);
+            //char *src = strtok(NULL, ",");
+            printf("session: %s\n", newMsg->data);
+	    bool found = false;
 
             // find the socket of the user
-            struct user *nominee = findUserName(user_list, invitee);
-            printf("nominee is found: %s\n", nominee->name);
-
-            respMsg->type = INVITE;
-            strcpy(respMsg->data, src);
-            respMsg->size = strlen(respMsg->data);
-            //memset(buff, 0, MAXBUFLEN);
+            struct user *nominee = findUserName(user_list, newMsg->source);
+	    struct session *session_found = findSession(session_list, newMsg->data);
+	    if (nominee == NULL) {
+		respMsg->type = INV_NACK_U;
+		strcpy(respMsg->data, newMsg->source);
+		respMsg->size = strlen(respMsg->data);
+		printf("nominee: %s not found\n", newMsg->source);
+	    }
+	    else if (session_found == NULL) {
+		respMsg->type = INV_NACK_S;
+		strcpy(respMsg->data, newMsg->data);
+		respMsg->size = strlen(respMsg->data);
+		printf("session: %s not found\n", newMsg->data);
+	    }
+	    else {
+                printf("nominee is found: %s\n", nominee->name);
+		printf("session is found: %s\n", session_found->sessionName);
+		found = true;
+                respMsg->type = INVITE;
+                strcpy(respMsg->data, newMsg->data);
+                respMsg->size = strlen(respMsg->data);
+	    }
             formatMessage(respMsg, buff);
-
-            printf("yoohoo\n");
-
-            int numbytes;
-            if((numbytes = send(nominee->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
-                fprintf(stderr, "send error\n");
-                return 0;
-            }
-
+	    int numbytes;
+            //printf("yoohoo\n");
+	    if (found) {
+                if((numbytes = send(nominee->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+                    fprintf(stderr, "send error\n");
+                    return 0;
+                }
+	    }
+	    else {
+                if((numbytes = send(newUser->sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
+                    fprintf(stderr, "send error\n");
+                    return 0;
+                }
+	    }
 
         }
         else if (newMsg->type == QUERY) {
@@ -385,34 +406,8 @@ void *message_handler(void *arg) {
             printf("data: %s", data);
             strncpy(respMsg->source, data, MAX_DATA);
             printf("source: %s\n", respMsg->source);
-        
-
-
-    
-        /*for(int i = 0; i < session_list->session_cnt; i++){
-            strcat(respMsg->source, ptr->sessionName);
-            strcat(respMsg->source, ": \n");
-            struct user *uptr = ptr->users->next;
-
-            while(1){
-                
-                strcat(respMsg->source, uptr->name);
-                strcat(respMsg->source, "\n");
-
-                if(uptr->next == NULL){
-                    break;
-                }
-                uptr = uptr->next;
-            }
-
-            ptr = ptr->next;
-
-        }*/
-        
-        
             memset(buff, 0, BUF_SIZE);
             formatMessage(respMsg, buff);
-        //printf("the string is here %s", buff);
 
             if((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1){
                 fprintf(stderr, "ACK error\n");
@@ -421,8 +416,6 @@ void *message_handler(void *arg) {
 	if (exited) {
             break;
 	}
-	//printf("end of loop\n");
-	//printUser(newUser);
     }
     printf("user: %s ", newUser->name);
     close(newUser->sockfd);

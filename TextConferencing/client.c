@@ -20,6 +20,9 @@
 char buff[MAXBUFLEN];
 
 int serversock = -1;
+bool invited = false;
+char invited_session[MAX_NAME];
+pthread_mutex_t invite_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //This fcn is used in the inet_ntop() for the login fcn as well
 void *get_in_addr(struct sockaddr *sock_arr) {
@@ -29,18 +32,18 @@ void *get_in_addr(struct sockaddr *sock_arr) {
     return &(((struct sockaddr_in6*)sock_arr)->sin6_addr);
 }
 
-void acceptReq(char *session, int sockfd) {
-    printf("aiyaa\n");
+void acceptReq(char *session, int sockfd, char *YorN) {
+    //printf("aiyaa\n");
 
-    char *YorN;
-    printf("Accept Invitation from %s ? (Y/N)\n", session);
-    scanf(" %c", YorN);
+    //char *YorN;
+    //printf("Accept Invitation from %s ? (Y/N)\n", session);
+    //scanf(" %c", YorN);
     
     struct message *msg = (struct message *)malloc(sizeof(struct message));
 
     if(strcmp(YorN,"Y") == 0){
         msg->type = JOIN;
-        printf("OK!\n");
+        printf("Invites Accepted!\n");
     } else {
         return;
     }
@@ -49,11 +52,10 @@ void acceptReq(char *session, int sockfd) {
 
     strncpy(msg->data, session, MAX_DATA);
     msg->size = strlen(msg->data);
-    printf("Le Session: %s \n", session);
-    printf("the message: %s \n", msg->data);
+    printf("Session: %s \n", session);
     // the receiver should based on this target session locate the right socket to send to
     formatMessage(msg, buff);
-
+    //printf("the message: %s \n", buff);
     if((numbytes = send(sockfd, buff, MAXBUFLEN - 1, 0)) == -1){
         fprintf(stderr, "send error\n");
         return;
@@ -93,10 +95,20 @@ void *msgRecv(void *arg) {
 	    fprintf(stdout, "User id & Session ids\n%s", recvMsg->data);
 	}
         else if (recvMsg->type == INVITE){
-            printf("aya\n");
-            acceptReq(recvMsg->data, *sockfd);
-            printf("nani\n");
+	    pthread_mutex_lock(&invite_lock);
+            printf("Accept invitation from session: %s?\n", recvMsg->data);
+	    strcpy(invited_session, recvMsg->data);
+	    invited = true;
+            //acceptReq(recvMsg->data, *sockfd);
+            //printf("nani\n");
+	    pthread_mutex_unlock(&invite_lock);
         }
+	else if (recvMsg->type == INV_NACK_U) {
+	    printf("invited user is not logged in, please chose a valid user to invite\n");
+	}
+	else if (recvMsg->type == INV_NACK_S) {
+	    printf("invited session does not exist, please input a valid session\n");
+	}
 	else {
 	    printf("Ignore\n");
 	}
@@ -455,16 +467,17 @@ void invite(char *cmd, int sockfd) {
     int numbytes;
    
     struct message *msg = (struct message *)malloc(sizeof(struct message));
-    char *src = strtok(NULL, " "); //cmd should contain the session id
-    printf("src %s\n", src);
     char *invitee = strtok(NULL, " "); //cmd should contain the session id
     printf("invitee %s\n", invitee);
+    char *src = strtok(NULL, " "); //cmd should contain the session id
+    printf("src %s\n", src);
 
     msg->type = INVITE;
-    char *invitation = strcat(invitee,"," );
-    invitation = strcat(invitation, src);
+    //char *invitation = strcat(invitee,"," );
+    //invitation = strcat(invitation, src);
 
-    strncpy(msg->data, invitation, MAX_DATA);
+    strncpy(msg->source, invitee, MAX_DATA);
+    strncpy(msg->data, src, MAX_DATA);
     msg->size = strlen(msg->data);
 
     memset(buff, 0, MAXBUFLEN);
@@ -523,6 +536,17 @@ int main(int argc, char **argv){
         if(*cmd == 0){ // representation of empty input
             continue; //move on expect the next command string
         }
+	else if (invited) {
+	    pthread_mutex_lock(&invite_lock);
+	    if (buff[0] == 'Y' || buff[0] == 'N' || buff[0] == 'y' || buff[0] == 'n') {
+		char YorN = buff[0];	        
+		acceptReq(invited_session, sockfd, &YorN);
+	    }
+	    invited = false;
+	    pthread_mutex_unlock(&invite_lock);
+	    continue;
+	}
+	    
 
         cmd = strtok(buff, " "); // break apart command based on spaces
         len = strlen(cmd);
