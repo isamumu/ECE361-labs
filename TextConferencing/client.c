@@ -93,8 +93,11 @@ void *msgRecv(void *arg) {
         else if (recvMsg->type == NS_ACK) {
             printf("Added new session and joined successfully!\n");
         }
+	else if (recvMsg->type == NS_NACK) {
+	    printf("%s\n", recvMsg->data);
+	}
 	else if (recvMsg->type == QU_ACK) {
-	    fprintf(stdout, "User id & Session ids\n%s", recvMsg->data);
+	    fprintf(stdout, "Session id & User ids\n%s", recvMsg->data);
 	}
         else if (recvMsg->type == INVITE){
 	    pthread_mutex_lock(&invite_lock);
