@@ -397,7 +397,7 @@ void *message_handler(void *arg) {
                 strcat(data, "->");
                 //printf("data2: %s\n", data);
                 struct user *people = ptr->users;
-                while(people->next != NULL){
+                while(people != NULL){
                     if(people->name != NULL){
                         strcat(data, people->name);
                         strcat(data, ", ");
