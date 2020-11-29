@@ -23,6 +23,8 @@ int serversock = -1;
 bool invited = false;
 char invited_session[MAX_NAME];
 pthread_mutex_t invite_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t timeout_lock = PTHREAD_MUTEX_INITIALIZER;
+bool is_timeout = false;
 
 //This fcn is used in the inet_ntop() for the login fcn as well
 void *get_in_addr(struct sockaddr *sock_arr) {
@@ -108,6 +110,14 @@ void *msgRecv(void *arg) {
 	}
 	else if (recvMsg->type == INV_NACK_S) {
 	    printf("invited session does not exist, please input a valid session\n");
+	}
+	else if (recvMsg->type == TIMEOUT) {
+	    //*sockfd = -1;
+	    pthread_mutex_lock(&timeout_lock);
+	    is_timeout = true;
+	    printf("Session Timeout, hit Enter to quit the program\n");
+	    pthread_mutex_unlock(&timeout_lock);
+	    break;
 	}
 	else {
 	    printf("Ignore\n");
@@ -450,7 +460,7 @@ void quit(int sockfd, pthread_t *recv_thread) {
         return;
     }
     if (pthread_cancel(*recv_thread)) {
-	perror("ERROR: pthread_cancel\n");
+	//perror("ERROR: pthread_cancel\n");
     }
     else {
         printf("program quitted\n");
@@ -524,6 +534,11 @@ int main(int argc, char **argv){
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
 
+	if (is_timeout) {
+	    //pthread_mutex_lock(&timeout_lock);
+	    quit(sockfd, &thread);
+	    break;
+	}
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
         buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0
@@ -536,7 +551,7 @@ int main(int argc, char **argv){
         if(*cmd == 0){ // representation of empty input
             continue; //move on expect the next command string
         }
-	else if (invited) {
+	if (invited) {
 	    pthread_mutex_lock(&invite_lock);
 	    if (buff[0] == 'Y' || buff[0] == 'N' || buff[0] == 'y' || buff[0] == 'n') {
 		char YorN = buff[0];	        
@@ -546,6 +561,11 @@ int main(int argc, char **argv){
 	    pthread_mutex_unlock(&invite_lock);
 	    continue;
 	}
+	//else if (is_timeout) {
+	    //pthread_mutex_lock(&timeout_lock);
+	    //quit(sockfd, &thread);
+	    //break;
+	//}
 	    
 
         cmd = strtok(buff, " "); // break apart command based on spaces

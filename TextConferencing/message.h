@@ -22,7 +22,8 @@ enum messageType {
 	INVITE,
 	ACCEPT,
 	INV_NACK_U,
-	INV_NACK_S
+	INV_NACK_S,
+	TIMEOUT
 };
 
 struct message {
