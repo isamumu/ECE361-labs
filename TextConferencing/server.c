@@ -112,7 +112,7 @@ void *message_handler(void *arg) {
 		    memcpy(myuser, newUser, sizeof(struct user));
                     //newUser->user_cnt = -1;
 	            pthread_mutex_lock(&users_lock);
-                    addUser(&user_list, newUser);
+                    addUser(&user_list, myuser);
 	            pthread_mutex_unlock(&users_lock);
 		    isLogin = true;
 	            printf("user %s logged in\n", newUser->name);
@@ -120,6 +120,7 @@ void *message_handler(void *arg) {
                 } 
 	        else {
                     respMsg->type = LO_NACK;
+		    exited = true;
                 }
 
                 formatMessage(respMsg, buff);
@@ -211,27 +212,13 @@ void *message_handler(void *arg) {
             //send back ACK and NACK
             //if every user leaves the linked list, then we change the name of session back to NULL
 	    printf("LEAVE_SESS recieved for user: %s\n", newUser->name);
-            //struct user *this_user = findUser(user_list, newUser->sockfd);
-	    //if (this_user == NULL) {
-	       //respMsg->type = ;
-	    //}
-	    if (newUser->sessionID != NULL) {
-                struct session *session_found = findSession(session_list, newUser->sessionID);
-	        printf("session name: %s\n", newUser->sessionID);
-	        //if (session_found != NULL) {
-	    	   // return;
-	        //}
-	        //this_user->sessionID = NULL;
+	    struct session *session_found = findSessUser(session_list, newUser);
+	    while (session_found != NULL) {
 		pthread_mutex_lock(&sessions_lock);
 	        removeSessUser(session_found, newUser, &session_list);
 		pthread_mutex_unlock(&sessions_lock);
-                    //if (session_found->users->user_cnt == -1) {
-		        //printf("session name: %s\n", this_user->sessionID);
-               	        //removeSession(session_list, this_user->sessionID);
-                    //}
-		//}
+		session_found = findSessUser(session_list, newUser);
 	    }
-	    newUser->sessionID = NULL;
 	    printSessions(session_list);
 	    printUsers(user_list);
         } 
@@ -239,17 +226,22 @@ void *message_handler(void *arg) {
             printf("NEW_SESS recieved for user: %s\n", newUser->name);
            
             if (newUser->sessionID == NULL) {
+		print_message(newMsg);
+		newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
+		strcpy(newUser->sessionID, newMsg->data);
+	    }
+	    //if (newUser->sessionID == NULL) {
 	        struct session *newSession = (struct session *)malloc(sizeof(struct session));
-            print_message(newMsg);
-            newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
-	        strcpy(newUser->sessionID, newMsg->data);
+                print_message(newMsg);
+                //newUser->sessionID = (char *)malloc(strlen(newMsg->data) + 1);
+	        //strcpy(newUser->sessionID, newMsg->data);
 	        struct user *myuser = (struct user *)malloc(sizeof(struct user));
-		    memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
+		memcpy((void *)myuser, (void *)newUser, sizeof(struct user));
 	        newSession->sessionName = newMsg->data;
 	        newSession->users = NULL;
 	        pthread_mutex_lock(&sessions_lock);
 	        addUser(&newSession->users, myuser);
-		    pthread_mutex_unlock(&sessions_lock);
+		pthread_mutex_unlock(&sessions_lock);
 	        newSession->next = NULL;
                 //newUser->sessionID = newMsg->data;
 	        //this_user->sessionID = newMsg->source;
@@ -264,7 +256,7 @@ void *message_handler(void *arg) {
             	printSessions(session_list); //check
                 respMsg->type = NS_ACK;
 	        strcpy(respMsg->data, newUser->sessionID);
-            }
+            //}
         
             formatMessage(respMsg, buff);
 
@@ -419,6 +411,7 @@ void *message_handler(void *arg) {
 
             if((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1){
                 fprintf(stderr, "ACK error\n");
+		return 0;
             }
         }
 	if (exited) {
@@ -440,18 +433,14 @@ void *message_handler(void *arg) {
 	pthread_mutex_lock(&users_lock);
 	removeUser(&user_list, newUser);
 	pthread_mutex_unlock(&users_lock);
-	struct session *ptr = session_list;
-	while (ptr != NULL) {
-	    struct user *uptr = ptr->users;
-	    if (uptr != NULL) {
-		pthread_mutex_lock(&sessions_lock);
-		removeSessUser(ptr, newUser, &session_list);
-		pthread_mutex_unlock(&sessions_lock);
-	    }
-	    ptr = ptr->next;
+	struct session *session_found = findSessUser(session_list, newUser);
+	while (session_found != NULL) {
+            pthread_mutex_lock(&sessions_lock);
+	    removeSessUser(session_found, newUser, &session_list);
+	    pthread_mutex_unlock(&sessions_lock);
+	    session_found = findSessUser(session_list, newUser);
 	}
 
-	//free(newUser);
 	pthread_mutex_lock(&ucnt_lock);
 	userCount--;
 	pthread_mutex_unlock(&ucnt_lock);
@@ -461,6 +450,8 @@ void *message_handler(void *arg) {
         printf("Please login\n");
     }
     isLogin = false;
+    pthread_cancel(newUser->thread);
+    free(newUser);
     return NULL;
 }
 
@@ -560,34 +551,38 @@ int main(int argc, char *argv[]){
     freeaddrinfo(servinfo);
 
     //timer
-    /*struct timeval timeout;
-    timeout.tv_sec = 600; //10mins
+    struct timeval timeout;
+    timeout.tv_sec = 30; //10mins
     timeout.tv_usec = 0;
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, sizeof(timeout));*/
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (void *)&timeout, sizeof(timeout));
 
     if ((numbytes = listen(sockfd, BACKLOG)) == -1) {
         perror("server: listen");
         exit(1);
     }
+    bool active = true;
+    int sockCheck = -1;
 
     printf("one moment please.....\n");
-    bool active = true; //the active bool stays true when the userCount > 0
-    while(active) {
+    while(1) {
 	struct user *newUser = (struct user *)malloc(sizeof(struct user));
-	if ((newUser->sockfd = accept(sockfd, (struct sockaddr *)&client_sock, &addr_size)) == -1) {
-	    perror("EROOR: accept");
-	    break;
+	if ((sockCheck = accept(sockfd, (struct sockaddr *)&client_sock, &addr_size)) == -1) {
+	    //perror("EROOR: accept");
+	    if (userCount == 0) {
+		active = false;
+	    }
+	    //break;
 	}
+	if (sockCheck != -1) {
+	newUser->sockfd = sockCheck;
 	printf("new connection made on socket %d\n", newUser->sockfd);
 	pthread_mutex_lock(&ucnt_lock);
 	userCount++;
 	pthread_mutex_unlock(&ucnt_lock);
 	pthread_create(&(newUser->thread), NULL, message_handler, (void *)newUser);
-	if (userCount > 0) {
-	    active = true;
 	}
-	else {
-	    active = false;
+	if (!active) {
+	    break;
 	}
     }
     printf("closing server\n");
