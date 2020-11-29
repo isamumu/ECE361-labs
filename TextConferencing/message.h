@@ -41,9 +41,11 @@ struct user {
     char *sessionID;
     int sockfd; // used as ref to send to every user in the linked list
     struct user *next;// = NULL; // NOTE: init to null here
-    struct joinedSessions *mySessions; // keep an up to date list of the joined sessions
+    //struct joinedSessions *mySessions; // keep an up to date list of the joined sessions
     int user_cnt;// = -1; //change on the dummy to 0
 };
+
+
 
 struct account {
 	char id[MAX_NAME];

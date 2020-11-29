@@ -402,7 +402,7 @@ void list(char* session, int sockfd) {
         return;
     } else {
 	printf("requesting listing info\n");
-        struct message *newMessage;
+        struct message *newMessage = (struct message *)malloc(sizeof(struct message));;
         newMessage->type = QUERY;
         newMessage->size = 0;
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to list
