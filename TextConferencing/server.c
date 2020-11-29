@@ -399,7 +399,7 @@ void *message_handler(void *arg) {
                 struct user *people = ptr->users;
                 while(people->next != NULL){
                     if(people->name != NULL){
-                        strcat(data, people->name,);
+                        strcat(data, people->name);
                         strcat(data, ", ");
                     }
                     people = people->next;
