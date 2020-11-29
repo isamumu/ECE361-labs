@@ -405,8 +405,9 @@ void list(char* session, int sockfd) {
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));;
         newMessage->type = QUERY;
         newMessage->size = 0;
+	//printf("requesting listing info\n");
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to list
-
+	//printf("requesting listing info\n");
         int bytes;
         formatMessage(newMessage, buff);
 	printf("message sent: %s\n", buff);
@@ -534,11 +535,7 @@ int main(int argc, char **argv){
     // for(;;) is an infinite loop for C like while(1)
     for (;;) { 
 
-	if (is_timeout) {
-	    //pthread_mutex_lock(&timeout_lock);
-	    quit(sockfd, &thread);
-	    break;
-	}
+	
         fgets(buff, MAXBUFLEN - 1, stdin); 
         // TODO: CHECK buff reset
         buff[strcspn(buff, "\n")] = 0; // assign the value of the new line to 0
@@ -561,11 +558,10 @@ int main(int argc, char **argv){
 	    pthread_mutex_unlock(&invite_lock);
 	    continue;
 	}
-	//else if (is_timeout) {
-	    //pthread_mutex_lock(&timeout_lock);
-	    //quit(sockfd, &thread);
-	    //break;
-	//}
+	else if (is_timeout) {
+	    quit(sockfd, &thread);
+	    break;
+	}
 	    
 
         cmd = strtok(buff, " "); // break apart command based on spaces

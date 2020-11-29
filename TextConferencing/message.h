@@ -141,6 +141,25 @@ struct session *findSession(struct session *head, char *name) {
 	return NULL;
 }
 
+struct session *findSessUser(struct session *head, struct user *myuser) {
+	if (head == NULL) {
+		//printf("findSessUser: head is null\n");
+		return NULL;
+	}
+	struct session *ptr = head;
+	while (ptr != NULL) {
+		struct user *uptr = ptr->users;
+		while (uptr != NULL) {
+			if (uptr->sockfd == myuser->sockfd) {
+				return ptr;
+			}
+			uptr = uptr->next;
+		}
+		ptr = ptr->next;
+	}
+	return NULL;
+}
+
 struct user *findUser(struct user *head, int fd) {
 	if (head == NULL) {
 		printf("findUser: head is null\n");
@@ -191,6 +210,7 @@ void removeSession(struct session **head, char *sessName) {
 	//ptr = ptr->next;
 	struct session *pptr = NULL;
 	while (ptr != NULL) {
+		//printf("at session node: %s\n", ptr->sessionName);
 		if (strcmp(ptr->sessionName, sessName) == 0) {
 			if (pptr == NULL) {
 			    *head = (*head)->next;
@@ -200,7 +220,7 @@ void removeSession(struct session **head, char *sessName) {
 			}
 			pptr->next = ptr->next;
 			ptr->next = NULL;
-			free(pptr);
+			free(ptr);
 			return;
 		}
 		pptr = ptr;
@@ -256,7 +276,7 @@ void removeUser(struct user **head, struct user *myUser) {
 void removeSessUser(struct session *sessLeave, struct user *usr, struct session **head) {
 	removeUser(&sessLeave->users, usr);
 	if (sessLeave->users == NULL) {
-		printf("i'm here\n");
+		//printf("i'm here\n");
 		removeSession(head, sessLeave->sessionName);
 	}
 	return;
@@ -275,6 +295,7 @@ void printUser(struct user *curr) {
 }
 
 void printUsers(struct user *head) {
+	printf("USERS\n");
 	if (head == NULL) {
 		printf("printUsers: head is null\n");
 		return;
@@ -299,6 +320,7 @@ void printSess(struct session *curr) {
 }
 
 void printSessions(struct session *head) {
+	printf("SESSIONS\n");
 	if (head == NULL) {
 		printf("printSessions: head is null\n");
 		return;
