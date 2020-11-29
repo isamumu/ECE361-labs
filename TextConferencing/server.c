@@ -225,13 +225,48 @@ void *message_handler(void *arg) {
             //send back ACK and NACK
             //if every user leaves the linked list, then we change the name of session back to NULL
 	    printf("LEAVE_SESS recieved for user: %s\n", newUser->name);
-	    struct session *session_found = findSessUser(session_list, newUser);
-	    while (session_found != NULL) {
-		pthread_mutex_lock(&sessions_lock);
-	        removeSessUser(session_found, newUser, &session_list);
-		pthread_mutex_unlock(&sessions_lock);
-		session_found = findSessUser(session_list, newUser);
+	    if (strcmp(newMsg->data, "all") == 0) {
+		struct session *session_found = findSessUser(session_list, newUser);
+		respMsg->type = LS_ACK;
+	        while (session_found != NULL) {
+		    pthread_mutex_lock(&sessions_lock);
+	            removeSessUser(session_found, newUser, &session_list);
+		    pthread_mutex_unlock(&sessions_lock);
+		    session_found = findSessUser(session_list, newUser);
+	        }
 	    }
+	    else {
+	        struct session *session_found = findSession(session_list, newMsg->data);
+	        if (session_found != NULL) {
+		    struct user *user_found = findUser(session_found->users, newUser->sockfd);
+		    if (user_found == NULL) {
+			respMsg->type = LS_NACK;
+		        memset(respMsg->data, 0, MAX_DATA);
+                        char tmp[100] = "Session not joined";
+                        strcpy(respMsg->data, tmp);
+                        respMsg->size = strlen(respMsg->data);
+                        printf("message sent: %s\n", respMsg->data);
+		    }
+		    else {
+		        respMsg->type = LS_ACK;
+		        pthread_mutex_lock(&sessions_lock);
+	                removeSessUser(session_found, newUser, &session_list);
+		        pthread_mutex_unlock(&sessions_lock);
+		    }
+	        }
+	        else {
+		    respMsg->type = LS_NACK;
+		    memset(respMsg->data, 0, MAX_DATA);
+                    char tmp[100] = "Session does not exist";
+                    strcpy(respMsg->data, tmp);
+                    respMsg->size = strlen(respMsg->data);
+                    printf("message sent: %s\n", respMsg->data);
+	        }
+	    }
+	    formatMessage(respMsg, buff);
+	    if ((numbytes = send(newUser->sockfd, buff, BUF_SIZE - 1, 0)) == -1) {
+                fprintf(stderr, "ACK error\n");
+            }
 	    printSessions(session_list);
 	    printUsers(user_list);
         } 
@@ -424,41 +459,78 @@ void *message_handler(void *arg) {
             //print out the list of user and avaliable sessions
             //send back ACK
 	    printf("QUERY recieved for user: %s\n", newUser->name);
-            respMsg->type = QU_ACK;
-            struct session *ptr = session_list;
-            //ptr = session_list->next;
-            //trcpy(respMsg->data, "hello there");
-            //respMsg->size = strlen(respMsg->data);
+	    if (strcmp(newMsg->data, "all") == 0) {
+		respMsg->type = QU_ACK;
+                struct session *ptr = session_list;
             
-            char data[MAX_DATA] = "";
-            //ptr = user_list->next;
-            while (ptr != NULL) {
-                if (ptr->sessionName == NULL) {
-                    ptr = ptr->next;
-                    continue;
-                }
-                strcat(data, ptr->sessionName);
-                //printf("data1: %s\n", data);
-                strcat(data, "->");
-                //printf("data2: %s\n", data);
-                struct user *people = ptr->users;
-                while(people != NULL){
-                    if(people->name != NULL){
-                        strcat(data, people->name);
-                        if(people->next != NULL){
-                            strcat(data, ", ");
+                char data[MAX_DATA] = "";
+                while (ptr != NULL) {
+                    if (ptr->sessionName == NULL) {
+                        ptr = ptr->next;
+                        continue;
+                   }
+                    strcat(data, ptr->sessionName);
+                    strcat(data, "->");
+                    struct user *people = ptr->users;
+                    while(people != NULL){
+                        if(people->name != NULL){
+                            strcat(data, people->name);
+                            if(people->next != NULL){
+                                strcat(data, ", ");
+                            }
                         }
+                        people = people->next;
                     }
-                    people = people->next;
-                }
-                //printf("data3: %s\n", data);
-                strcat(data, "\n");
-                ptr = ptr->next;
-            }
+                    strcat(data, "\n");
+                    ptr = ptr->next;
+               }
+		strncpy(respMsg->source, data, MAX_DATA);
+	    }
+	    else {
+	        struct session *session_found = findSession(session_list, newMsg->data);
+	        if (session_found == NULL) {
+		    respMsg->type = QU_NACK;
+		    memset(respMsg->data, 0, MAX_DATA);
+                    char tmp[100] = "Session does not exist";
+                    strcpy(respMsg->data, tmp);
+                    respMsg->size = strlen(respMsg->data);
+                    printf("message sent: %s\n", respMsg->data);
+	        }
+		else {
+		    struct user *user_found = findUser(session_found->users, newUser->sockfd);
+		    if (user_found == NULL) {
+			respMsg->type = QU_NACK;
+		        memset(respMsg->data, 0, MAX_DATA);
+                        char tmp[100] = "Session not joined";
+                        strcpy(respMsg->data, tmp);
+                        respMsg->size = strlen(respMsg->data);
+                        printf("message sent: %s\n", respMsg->data);
+		    }
+		    else {
+            	        respMsg->type = QU_ACK;
+            
+                        char data[MAX_DATA] = "";
+                        strcat(data, session_found->sessionName);
+                        strcat(data, "->");
+                        struct user *people = session_found->users;
+                        while(people != NULL){
+                            if(people->name != NULL){
+                                strcat(data, people->name);
+                                if(people->next != NULL){
+                                    strcat(data, ", ");
+                                }
+                            }
+                            people = people->next;
+                        }
+                        strcat(data, "\n");
+		        strncpy(respMsg->source, data, MAX_DATA);
+		    }
+		}
+	    }
         
-            printf("data: %s", data);
-            strncpy(respMsg->source, data, MAX_DATA);
-            printf("source: %s\n", respMsg->source);
+            //printf("data: %s", data);
+            //strncpy(respMsg->data, data, MAX_DATA);
+            //printf("source: %s\n", respMsg->data);
             memset(buff, 0, BUF_SIZE);
             formatMessage(respMsg, buff);
 
