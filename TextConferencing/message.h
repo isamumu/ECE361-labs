@@ -16,15 +16,18 @@ enum messageType {
 	LEAVE_SESS,
 	NEW_SESS,
 	NS_ACK,
+	NS_NACK,
 	MESSAGE,
 	QUERY,
 	QU_ACK,
+	QU_NACK,
 	INVITE,
 	ACCEPT,
 	INV_NACK_U,
 	INV_NACK_S,
 	TIMEOUT,
-	NS_NACK
+	LS_NACK,
+	LS_ACK
 };
 
 struct message {

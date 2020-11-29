@@ -96,8 +96,17 @@ void *msgRecv(void *arg) {
 	else if (recvMsg->type == NS_NACK) {
 	    printf("%s\n", recvMsg->data);
 	}
+	else if (recvMsg->type == LS_ACK) {
+	    printf("leave session success!\n");
+	}
+	else if (recvMsg->type == LS_NACK) {
+	    printf("%s\n", recvMsg->data);
+	}
 	else if (recvMsg->type == QU_ACK) {
 	    fprintf(stdout, "Session id & User ids\n%s", recvMsg->data);
+	}
+	else if (recvMsg->type == QU_NACK) {
+	    printf("%s\n", recvMsg->data);
 	}
         else if (recvMsg->type == INVITE){
 	    pthread_mutex_lock(&invite_lock);
@@ -315,36 +324,24 @@ void joinsession(char *session, int sockfd) {
             fprintf(stdout, "ERROR: send() failed\n");
             return;
         }
-
-        /*if ((bytes = recv(sockfd, buff, MAXBUFLEN - 1, 0)) == -1) {
-			fprintf(stderr, "ERROR: nothing received\n");
-			return;
-		}
-
-        buff[bytes] = 0; // mark end of the string
-        newMessage = formatString(buff);
-
-        if (newMessage->type == JN_ACK) {
-            fprintf(stdout, "Join Successful!\n");
-            //joined = true;
-        } else if (newMessage->type == JN_NACK) {
-            fprintf(stdout, "Join Failed... Data: %s\n", newMessage->source);
-            //joined = false;
-	}*/
         return;
     }
 }
 
 void leavesession(char *session, int sockfd) {
-    if (sockfd == -1) {
+    if (session == NULL) {
+	printf("invalid session id, input format: /leavesession <session ID>\n");
+	return;
+    }
+    else if (sockfd == -1) {
         fprintf(stdout, "Please login to a server before trying to leave a session\n");
         return;
     } else {
 	printf("leaving sessions\n");
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));
         newMessage->type = LEAVE_SESS;
-        newMessage->size = 0;
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to leave
+	newMessage->size = strlen(newMessage->data);
 
         int bytes;
 
@@ -356,7 +353,7 @@ void leavesession(char *session, int sockfd) {
             return;
         }
 	//joined = false;
-	printf("leave session success\n");
+	//printf("leave session success\n");
         return;
     }
 }
@@ -366,6 +363,9 @@ void createsession(char *session, int sockfd) {
     if (session == NULL) {
         printf("invalid session id, input format: /createsession <session ID>\n");
         return;
+    } else if (strcmp(session, "all") == 0) {
+	printf("keyword 'all' saved for general call\n");
+	return;
     } else if (sockfd == INVALID_SOCKET) {
         printf("Please login to a server before trying to create a session\n");
         return;
@@ -400,17 +400,19 @@ void createsession(char *session, int sockfd) {
 }
 
 void list(char* session, int sockfd) {
-    if (sockfd == INVALID_SOCKET) {
+    if (session == NULL) {
+	printf("invalid session id, input format: /list <session ID>\n");
+	return;
+    }
+    else if (sockfd == INVALID_SOCKET) {
         fprintf(stdout, "Please login to a server before trying to list\n");
         return;
     } else {
 	printf("requesting listing info\n");
         struct message *newMessage = (struct message *)malloc(sizeof(struct message));;
         newMessage->type = QUERY;
-        newMessage->size = 0;
-	//printf("requesting listing info\n");
         strncpy(newMessage->data, session, MAX_DATA); // tell the server which server to list
-	//printf("requesting listing info\n");
+	newMessage->size = strlen(newMessage->data);
         int bytes;
         formatMessage(newMessage, buff);
 	printf("message sent: %s\n", buff);
@@ -588,7 +590,8 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/leavesession") == 0) {
             // leave the currently established session
-            leavesession("all", sockfd);
+	    cmd = strtok(NULL, " ");
+            leavesession(cmd, sockfd);
             
 		} else if (strcmp(cmd, "/createsession") == 0) {
             // create a new conference session and join it
@@ -597,7 +600,8 @@ int main(int argc, char **argv){
 
 		} else if (strcmp(cmd, "/list") == 0) {
             // get the list of the connected clients and available sessions
-			list("all", sockfd);
+			cmd = strtok(NULL, " ");
+			list(cmd, sockfd);
 
 		} else if (strcmp(cmd, "/quit") == 0) {
             // terminate the program
