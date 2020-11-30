@@ -1,0 +1,141 @@
+Text Conferencing Lab
+
+
+
+/////////////////////////////////////////Design and Implementation/////////////////////////////////////////
+
+The program is a simple conferencing application that uses UNIX TCP sockets. The program consists a server.c file, a client.c file, and a header file called message.h
+
+To use the program, the users are expected to use their username and password to first login to the server. Registered usernames and their respective passwords are initially stored inside the server program as a linked lists of users node. Upon logging in by a client, the server will verify the user's informations and create a proxis thread for the user.
+
+When a user wants to communicate with other users, a session has to be created and joined. Messages can be send between the users that are joined in the same session. All clients in that session will be able to view the message. 
+
+If a user wishes to communicate with different groups of people, multiple sessions can be joined. The message will only be boardcast to the selected session.
+
+A user can also invite other clients into a session, and the client that is being invited has the option to accept or decline the invitation.
+
+When a user is not using the program for 10 minutes straight the socket will close. When no client is using the server for 10 minutes straight the server will close.
+
+
+
+//////////////////////////////////////////////////Protocol//////////////////////////////////////////////////
+
+There are four different structures implemented for this lab
+
+struct message {
+	unsigned int type;
+    unsigned int size;
+    unsigned char source[MAX_NAME];
+    unsigned char data[MAX_DATA];
+}
+
+The message structure is used to communicate between the server and the client. the type field indicates the type of the message as describe below. The size field indicates the length of the data and the source field contains ID of the client. 
+
+enum messageType {
+	LOGIN, //Login with the server
+	LO_ACK, //Acknowledge successful login
+	LO_NACK, //Unsuccessful login
+	EXIT, //Exit from the server
+	JOIN, //join a session
+	JN_ACK, //successful session join
+	JN_NACK, //unsuccessful session join
+	LEAVE_SESS, //leave a selected session
+	LS_NACK, //Unsuccessful leaving
+	LS_ACK, //successful leaving
+	NEW_SESS, //creating a new session
+	NS_ACK, //successful session creation
+	NS_NACK, //unsuccessful session creation
+	MESSAGE, //send a message to the session or display the message recieved
+	QUERY, //list the session selected
+	QU_ACK, //successful list information acquired
+	QU_NACK, //unsuccessful listing
+	INVITE, //invite recieved or send
+	ACCEPT, //acceptance of the invitation
+	INV_NACK_U, //invited user is not logged in
+	INV_NACK_S, //invited session does not exist
+	TIMEOUT //timeout in the user
+};
+
+All the negative acknowledgement will be sent by the server with an error message stored in the data field of the message structure.
+
+struct user {
+    pthread_t thread;
+    char name[MAX_NAME];
+    char password[MAX_NAME];
+    int sockfd; // used as ref to send to every user in the linked list
+    struct user *next;
+};
+
+The user structure is used to store the logged in users' information. The thread field indicate the pthread that this user is on. The name and password fields stores the loggin information for the user. sockfd field stores the socket file descriptor information for the user. the next field links the user to the next user.
+
+struct account {
+	char id[MAX_NAME];
+	char password[MAX_NAME];
+	struct account *next;
+
+};
+
+The account structure stores the login information for the registered users
+
+// for each session created
+struct session {
+	char *sessionName;
+	struct user *users; //users who joined this session
+	struct session *next;// = NULL; // i think this is good practice?
+};
+
+The session structure store the information for the session created. 
+
+
+
+/////////////////////////////////////////Client's Commands Format://///////////////////////////////////////
+
+Log into the server at the given address and port.
+/login <client_id> <password> <server_ip> <server_port>
+
+Exit the server
+/logout
+
+Join the session with a given session id
+/joinsession <session ID>
+
+Leave a selected session (replace session ID as 'all' to leave all sessions joined by the user)
+/leavesession <session ID>
+
+Create a new conference session and join
+/createsession <session ID>
+
+Get the list of a selected joined session with all of it's connected users (replace session ID as 'all' to list all sessions avaliable)
+/list <session ID>
+
+Terminate the program
+/quit
+
+Send a message to the selected joined session
+<session ID>,<message>
+
+Invite a user to a selected session
+/invite <username> <session ID>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
